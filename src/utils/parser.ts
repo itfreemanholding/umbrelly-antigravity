@@ -1,6 +1,7 @@
 export interface ParsedJob {
     id: string;
     title: string;
+    scannerName: string;
     description: string;
     budget: string;
     duration: string;
@@ -34,7 +35,7 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
 
     if (lines.length < 3) {
         // If it's too short, just treat the whole thing as a description
-        return { title: 'Unknown Title', description: text };
+        return { title: 'Unknown Title', scannerName: 'Unknown Scanner', description: text };
     }
 
     const title = lines[0];
@@ -147,6 +148,7 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
 
     return {
         title,
+        scannerName: 'Unknown Scanner', // Will be overridden if provided by extension
         description: description || 'No description extracted',
         skills,
         gigRadarScore,

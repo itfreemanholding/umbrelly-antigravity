@@ -1,36 +1,65 @@
 // RevOps Data Catcher - Inline DOM Injector
 
-function getBooleanSearch() {
-    // Exact GigRadar Search Bar Input Class
-    const mainInput = document.querySelector('input.ant-input.ant-input-lg.ant-input-borderless');
-    if (mainInput && mainInput.value && mainInput.value.length > 2) {
-        return mainInput.value;
+function getScannerName() {
+    // Top-level heading element (the red box in screenshot)
+    const headings = Array.from(document.querySelectorAll('h1, h2, div.ant-typography, span.ant-typography'));
+    // Usually the largest, closest heading at the top of the GigRadar scanner panel
+    for (let h of headings) {
+        const text = h.innerText || '';
+        if (text.length > 3 && h.tagName === 'H1') {
+            return text.trim();
+        }
     }
 
-    const inputs = Array.from(document.querySelectorAll('input, textarea'));
+    // Fallback: Check for generic title classes that look like large headings
+    for (let h of headings) {
+        const text = h.innerText || '';
+        if (text.length > 3 && (text.toLowerCase().includes('copy of') || h.className.toLowerCase().includes('title'))) {
+            return text.trim();
+        }
+    }
+
+    return 'Unknown Scanner';
+}
+
+function getBooleanSearch() {
+    // 1. The Green Box in the screenshot - it is an input field, often bordered, beneath the scanner name
+    const inputs = Array.from(document.querySelectorAll('input.ant-input'));
     let bestMatch = '';
 
-    // Look for inputs containing typical boolean operators or quotes
+    // The boolean search is the input that typically has the most text or explicit boolean characters.
+    // However, if the user explicitly showed it's the second input, or the one containing the query...
     for (let input of inputs) {
         const val = input.value || '';
-        if (val.length > 3 && (val.includes('(') || val.includes('"') || val.includes('|') || val.includes('*'))) {
-            bestMatch = val;
-            break;
+        // If it looks like a boolean query OR it's just a long string (like "real estate platform")
+        if (val.length > 5 && (val.includes('(') || val.includes('|') || val.includes('"') || val.includes('AND') || val.includes('OR'))) {
+            return val;
         }
     }
 
-    // Fallback: check DOM for the active scanner title if the input isn't found
-    if (!bestMatch) {
-        const headings = Array.from(document.querySelectorAll('h1, h2, h3, div[class*="title"], span[class*="title"]'));
-        for (let h of headings) {
-            const text = h.innerText || '';
-            if (text.length > 3 && (text.includes('"') || text.includes('('))) {
-                bestMatch = text.trim();
-                break;
-            }
+    // Fallback: Grabbing the value of the most populated text input that IS NOT a tiny search bar
+    let longestInput = '';
+    for (let input of inputs) {
+        const val = input.value || '';
+        if (val.length > longestInput.length) {
+            longestInput = val;
         }
     }
-    return bestMatch || 'Unknown Query';
+
+    if (longestInput.length > 3) {
+        return longestInput;
+    }
+
+    // 3. Fallback: Search ALL inputs if the specific class failed
+    const allInputs = Array.from(document.querySelectorAll('input, textarea'));
+    for (let input of allInputs) {
+        const val = input.value || '';
+        if (val.length > 5 && (val.includes('(') || val.includes('|') || val.includes('"'))) {
+            return val;
+        }
+    }
+
+    return 'Unknown Query';
 }
 
 function saveJob(jobData, isMatch, statusEl) {
@@ -46,6 +75,51 @@ function saveJob(jobData, isMatch, statusEl) {
         }
         setTimeout(() => { statusEl.innerText = ''; }, 2000);
     });
+}
+
+// Inject global styles exactly once for button hover states
+if (!document.getElementById('revops-ext-styles')) {
+    const style = document.createElement('style');
+    style.id = 'revops-ext-styles';
+    style.innerHTML = `
+        .revops-btn-match {
+            background: #10b981 !important;
+            color: white !important;
+            border: none !important;
+            padding: 10px 24px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+        }
+        .revops-btn-match:hover {
+            background: #059669 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
+        }
+        .revops-btn-no-match {
+            background: white !important;
+            color: #ef4444 !important;
+            border: 1.5px solid #ef4444 !important;
+            padding: 9px 24px !important; /* Adjusted for border */
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
+            transition: all 0.2s ease !important;
+        }
+        .revops-btn-no-match:hover {
+            background: #fef2f2 !important;
+            color: #dc2626 !important;
+            border-color: #dc2626 !important;
+            transform: translateY(-1px) !important;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 function addButtonsToJobs() {
@@ -75,12 +149,12 @@ function addButtonsToJobs() {
         // Create action bar
         const actionBar = document.createElement('div');
         actionBar.className = 'revops-inline-actions';
-        actionBar.style.cssText = 'display: flex; gap: 16px; margin-top: 24px; margin-bottom: 8px; align-items: center; justify-content: flex-start; z-index: 10; width: 100%;';
+        actionBar.style.cssText = 'display: flex; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; align-items: center; justify-content: flex-end; z-index: 10; width: 100%;';
 
         actionBar.innerHTML = `
-            <button class="revops-btn-match" style="background: #00ff00; color: white; border: none; padding: 12px 32px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; font-family: sans-serif; transition: transform 0.1s; box-shadow: 0 4px 6px rgba(0, 255, 0, 0.3); text-align: center;">Match</button>
-            <button class="revops-btn-no-match" style="background: white; color: #ff0000; border: 3px solid #ff0000; padding: 10px 32px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; font-family: sans-serif; transition: transform 0.1s; text-align: center;">No Match</button>
-            <span class="revops-status" style="margin-left: 16px; font-size: 16px; font-weight: bold; font-family: sans-serif;"></span>
+            <span class="revops-status" style="margin-right: auto; font-size: 14px; font-weight: 600; font-family: system-ui, sans-serif;"></span>
+            <button class="revops-btn-no-match">No Match</button>
+            <button class="revops-btn-match">Match</button>
         `;
 
         const extractJobData = () => {
@@ -97,6 +171,7 @@ function addButtonsToJobs() {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 title: title,
                 rawText: card.innerText,
+                scannerName: getScannerName(),
                 booleanSearch: getBooleanSearch(),
                 dateRecorded: new Date().toISOString()
             };

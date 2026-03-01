@@ -7,6 +7,7 @@ import { DataView } from './components/data/DataView';
 import type { ParsedJob } from './utils/parser';
 import { IngestionView } from './components/ingestion/IngestionView';
 import { ConfiguratorView } from './components/configurator/ConfiguratorView';
+import { parseGigRadarText } from './utils/parser';
 
 export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator';
 
@@ -21,6 +22,49 @@ function App() {
   useEffect(() => {
     localStorage.setItem('revops_saved_jobs', JSON.stringify(savedJobs));
   }, [savedJobs]);
+
+  // Listen for Chrome Extension Syncs to auto-populate the Data Hub
+  useEffect(() => {
+    const handleExtensionSync = () => {
+      try {
+        const data = localStorage.getItem('revops_extension_sync');
+        if (data) {
+          const extensionJobs = JSON.parse(data);
+          const matches = extensionJobs.filter((j: any) => j.isMatch);
+
+          if (matches.length > 0) {
+            setSavedJobs((prev: ParsedJob[]) => {
+              const existingIds = new Set(prev.map(p => p.id));
+              let added = false;
+              const newJobs = [...prev];
+
+              for (const match of matches) {
+                if (!existingIds.has(match.id)) {
+                  const parsed = parseGigRadarText(match.rawText) as ParsedJob;
+                  parsed.id = match.id;
+                  parsed.title = match.title || parsed.title;
+                  parsed.scannerName = match.scannerName || parsed.scannerName;
+                  parsed.booleanSearch = match.booleanSearch || '';
+                  parsed.matchScore = 10; // Explicit match from extension is a 10
+                  parsed.dateIngested = match.dateRecorded || new Date().toISOString();
+                  newJobs.unshift(parsed);
+                  added = true;
+                }
+              }
+
+              return added ? newJobs : prev;
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync extension jobs to Data Hub", err);
+      }
+    };
+
+    window.addEventListener('storage', handleExtensionSync);
+    handleExtensionSync(); // Initial load check
+    return () => window.removeEventListener('storage', handleExtensionSync);
+  }, []);
 
   useEffect(() => {
     if (window.location.search.includes('view=data')) {
