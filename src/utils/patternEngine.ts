@@ -4,6 +4,7 @@ export interface GeneratedBoolean {
     matchesTotal: number;
     rejectionsExcluded: number;
     rejectionsTotal: number;
+    matchedIds: string[];
 }
 
 export function runPatternEngine(matches: any[], rejections: any[]): GeneratedBoolean[] {
@@ -12,9 +13,9 @@ export function runPatternEngine(matches: any[], rejections: any[]): GeneratedBo
 
     if (matchLen === 0) {
         return [
-            { query: '((AWS | Azure | GCP) & (Migration | Optimization | FinOps))', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0 },
-            { query: '("Cloud Architect" | "DevOps Engineer")', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0 },
-            { query: '(kubernetes | docker) (terraform | cloudformation)', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0 }
+            { query: '((AWS | Azure | GCP) & (Migration | Optimization | FinOps))', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0, matchedIds: [] },
+            { query: '("Cloud Architect" | "DevOps Engineer")', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0, matchedIds: [] },
+            { query: '(kubernetes | docker) (terraform | cloudformation)', matchesIncluded: 0, matchesTotal: 0, rejectionsExcluded: 0, rejectionsTotal: 0, matchedIds: [] }
         ];
     }
 
@@ -86,21 +87,24 @@ export function runPatternEngine(matches: any[], rejections: any[]): GeneratedBo
             matchesIncluded: matches.filter(m => evaluate(0, m)).length,
             matchesTotal: matchLen,
             rejectionsExcluded: rejections.filter(m => !evaluate(0, m)).length,
-            rejectionsTotal: rejLen
+            rejectionsTotal: rejLen,
+            matchedIds: [...matches, ...rejections].filter(m => evaluate(0, m)).map(m => m.id)
         },
         {
             query: q2,
             matchesIncluded: matches.filter(m => evaluate(1, m)).length,
             matchesTotal: matchLen,
             rejectionsExcluded: rejections.filter(m => !evaluate(1, m)).length,
-            rejectionsTotal: rejLen
+            rejectionsTotal: rejLen,
+            matchedIds: [...matches, ...rejections].filter(m => evaluate(1, m)).map(m => m.id)
         },
         {
             query: q3,
             matchesIncluded: matches.filter(m => evaluate(2, m)).length,
             matchesTotal: matchLen,
             rejectionsExcluded: rejections.filter(m => !evaluate(2, m)).length,
-            rejectionsTotal: rejLen
+            rejectionsTotal: rejLen,
+            matchedIds: [...matches, ...rejections].filter(m => evaluate(2, m)).map(m => m.id)
         }
     ];
 }

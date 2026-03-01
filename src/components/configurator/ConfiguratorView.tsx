@@ -19,6 +19,7 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
     const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [generatedBooleans, setGeneratedBooleans] = useState<GeneratedBoolean[]>([]);
+    const [testedStrategy, setTestedStrategy] = useState<GeneratedBoolean | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const toggleExpand = (id: string, e: React.MouseEvent) => {
@@ -54,8 +55,11 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
         return () => window.removeEventListener('storage', loadFromStorage);
     }, []);
 
-    const matches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
-    const rejections = scannedJobs.filter(j => !j.isMatch);
+    const baseMatches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
+    const baseRejections = scannedJobs.filter(j => !j.isMatch);
+
+    const matches = testedStrategy ? baseMatches.filter(m => testedStrategy.matchedIds.includes(m.id)) : baseMatches;
+    const rejections = testedStrategy ? baseRejections.filter(r => testedStrategy.matchedIds.includes(r.id)) : baseRejections;
 
     const runAnalysis = () => {
         setIsAnalyzing(true);
@@ -133,6 +137,21 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                     <div className="boolean-code-block" style={{ margin: 0, background: 'var(--bg-primary)' }}>
                                         <code style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>{gb.query}</code>
                                     </div>
+                                    <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                                        <button
+                                            className="secondary-btn"
+                                            onClick={() => setTestedStrategy(testedStrategy === gb ? null : gb)}
+                                            style={{
+                                                fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px',
+                                                background: testedStrategy === gb ? 'var(--accent-primary)' : 'transparent',
+                                                color: testedStrategy === gb ? '#fff' : 'var(--text-primary)',
+                                                borderColor: testedStrategy === gb ? 'var(--accent-primary)' : 'var(--border-color)'
+                                            }}
+                                        >
+                                            <Zap size={14} />
+                                            {testedStrategy === gb ? 'Clear Test Filter' : 'Test Strategy on Data'}
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -154,7 +173,7 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
-                                                <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
+                                                <HighlightedText text={parsed.title || job.title} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                             </h4>
                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
                                                 <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">
@@ -164,9 +183,10 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                             </div>
                                         </div>
 
-                                        {job.booleanSearch && (
+                                        {(testedStrategy?.query || job.booleanSearch) && (
                                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>
-                                                <strong>Query:</strong> {job.booleanSearch}
+                                                <strong>Query:</strong> {testedStrategy?.query || job.booleanSearch}
+                                                {testedStrategy && <span style={{ marginLeft: '6px', color: 'var(--accent-primary)' }}>(Test Mode)</span>}
                                             </div>
                                         )}
 
@@ -181,7 +201,7 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                                 <div className="raw-text-block" style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '24px', background: 'transparent', padding: 0, border: 'none' }}>
                                                     {(parsed.description || '').split('\n').map((line: string, i: number) => (
                                                         <p key={i} style={{ marginBottom: line.trim() === '' ? '0' : '12px', minHeight: line.trim() === '' ? '12px' : 'auto', marginTop: 0 }}>
-                                                            <HighlightedText text={line} booleanQuery={job.booleanSearch} />
+                                                            <HighlightedText text={line} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                                         </p>
                                                     ))}
                                                 </div>
@@ -271,7 +291,7 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
-                                                <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
+                                                <HighlightedText text={parsed.title || job.title} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                             </h4>
                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
                                                 <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">
@@ -281,9 +301,10 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                             </div>
                                         </div>
 
-                                        {job.booleanSearch && (
+                                        {(testedStrategy?.query || job.booleanSearch) && (
                                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>
-                                                <strong>Query:</strong> {job.booleanSearch}
+                                                <strong>Query:</strong> {testedStrategy?.query || job.booleanSearch}
+                                                {testedStrategy && <span style={{ marginLeft: '6px', color: 'var(--accent-primary)' }}>(Test Mode)</span>}
                                             </div>
                                         )}
 
@@ -298,7 +319,7 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                                                 <div className="raw-text-block" style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '24px', background: 'transparent', padding: 0, border: 'none' }}>
                                                     {(parsed.description || '').split('\n').map((line: string, i: number) => (
                                                         <p key={i} style={{ marginBottom: line.trim() === '' ? '0' : '12px', minHeight: line.trim() === '' ? '12px' : 'auto', marginTop: 0 }}>
-                                                            <HighlightedText text={line} booleanQuery={job.booleanSearch} />
+                                                            <HighlightedText text={line} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                                         </p>
                                                     ))}
                                                 </div>
