@@ -21,3 +21,16 @@ chrome.runtime.onMessage.addListener((message) => {
         syncToApp();
     }
 });
+
+// Listen for deletes originating from the React App UI
+window.addEventListener('revops:delete_job', (e) => {
+    const jobId = e.detail;
+    chrome.storage.local.get(['scannedJobs'], (result) => {
+        const jobs = result.scannedJobs || [];
+        const newJobs = jobs.filter(j => j.id !== jobId);
+        chrome.storage.local.set({ scannedJobs: newJobs }, () => {
+            // We intentionally do not call syncToApp() here to avoid a React render loop,
+            // because the React app already deleted it locally. We just synced Chrome.
+        });
+    });
+});

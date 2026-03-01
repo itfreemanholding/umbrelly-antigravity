@@ -110,6 +110,9 @@ function App() {
         localStorage.setItem('revops_extension_sync', JSON.stringify(extJobs));
       }
     } catch (err) { }
+
+    // Dispatch event to app-sync.js so it deletes the job from the true Chrome internal storage
+    window.dispatchEvent(new CustomEvent('revops:delete_job', { detail: id }));
   };
 
   const handleUpdateJob = (updatedJob: ParsedJob) => {
