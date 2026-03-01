@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Settings, ThumbsUp, ThumbsDown, Zap, ChevronDown, ChevronUp, Trash2, Info } from 'lucide-react';
 import { HighlightedText } from '../ui/HighlightedText';
 import { parseGigRadarText } from '../../utils/parser';
+import { runPatternEngine, type GeneratedBoolean } from '../../utils/patternEngine';
 import './ConfiguratorView.css';
 
 interface ScannedJob {
@@ -17,7 +18,7 @@ interface ScannedJob {
 export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJobs?: any[], onDeleteJob?: (id: string) => void }) {
     const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [generatedBoolean, setGeneratedBoolean] = useState('');
+    const [generatedBooleans, setGeneratedBooleans] = useState<GeneratedBoolean[]>([]);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const toggleExpand = (id: string, e: React.MouseEvent) => {
@@ -53,19 +54,20 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
         return () => window.removeEventListener('storage', loadFromStorage);
     }, []);
 
+    const matches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
+    const rejections = scannedJobs.filter(j => !j.isMatch);
+
     const runAnalysis = () => {
         setIsAnalyzing(true);
-        setGeneratedBoolean('');
+        setGeneratedBooleans([]);
 
         // Simulate AI analysis delay
         setTimeout(() => {
             setIsAnalyzing(false);
-            setGeneratedBoolean('((AWS | Azure | GCP) & (Migration | Optimization | FinOps)) | ("Cloud Architect" & !Support)');
+            const results = runPatternEngine(matches, rejections);
+            setGeneratedBooleans(results);
         }, 2000);
     };
-
-    const matches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
-    const rejections = scannedJobs.filter(j => !j.isMatch);
 
     return (
         <div className="configurator-container fade-in-up">
@@ -111,12 +113,28 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
                         </button>
                     </div>
 
-                    {generatedBoolean && !isAnalyzing && (
-                        <div className="generated-result fade-in">
-                            <h4 style={{ color: 'var(--accent-primary)', marginBottom: '8px', fontSize: '14px' }}>Optimized GigRadar Boolean:</h4>
-                            <div className="boolean-code-block">
-                                <code>{generatedBoolean}</code>
-                            </div>
+                    {generatedBooleans.length > 0 && !isAnalyzing && (
+                        <div className="generated-results fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                            <h4 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '15px' }}>Optimized GigRadar Booleans:</h4>
+
+                            {generatedBooleans.map((gb, idx) => (
+                                <div key={idx} className="glass-panel stagger-1" style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', animationDelay: `${idx * 0.15}s` }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>Strategy Option {idx + 1}</div>
+                                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', background: 'var(--bg-tertiary)', padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                                            <span style={{ color: 'var(--success)' }}>
+                                                Includes Matches: <strong style={{ marginLeft: '4px' }}>{gb.matchesIncluded}/{gb.matchesTotal}</strong>
+                                            </span>
+                                            <span style={{ color: 'var(--danger)' }}>
+                                                Excludes Rejections: <strong style={{ marginLeft: '4px' }}>{gb.rejectionsExcluded}/{gb.rejectionsTotal}</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="boolean-code-block" style={{ margin: 0, background: 'var(--bg-primary)' }}>
+                                        <code style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>{gb.query}</code>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
