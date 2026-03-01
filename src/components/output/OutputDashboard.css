@@ -70,10 +70,10 @@
 }
 
 .category-btn.active {
-    background: var(--bg-tertiary);
-    color: white;
+    background: var(--bg-secondary);
+    color: var(--accent-primary-hover);
     border-color: var(--border-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .cat-icon {

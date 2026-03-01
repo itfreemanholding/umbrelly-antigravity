@@ -1,9 +1,11 @@
 
 import {
-    Database,
-    Activity,
+    Zap,
+    Archive,
     PieChart,
-    Zap
+    Database,
+    BrainCircuit,
+    Settings
 } from 'lucide-react';
 import type { AppState } from '../../App';
 
@@ -32,12 +34,11 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                 </button>
 
                 <button
-                    className={`nav-item ${currentView === 'processing' ? 'active' : ''} ${currentView === 'ingestion' ? 'disabled' : ''}`}
-                    onClick={() => currentView !== 'ingestion' && onNavigate('processing')}
-                    disabled={currentView === 'ingestion'}
+                    className={`nav-item ${currentView === 'data' ? 'active' : ''}`}
+                    onClick={() => onNavigate('data')}
                 >
-                    <Activity className="nav-icon" />
-                    Analysis Engine
+                    <Archive className="nav-icon" />
+                    Data Hub
                 </button>
 
                 <button
@@ -47,6 +48,22 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                 >
                     <PieChart className="nav-icon" />
                     Output Hub
+                </button>
+
+                <button
+                    className={`nav-item ${currentView === 'scanner' ? 'active' : ''}`}
+                    onClick={() => onNavigate('scanner')}
+                >
+                    <BrainCircuit className="nav-icon" />
+                    Scanner Hub
+                </button>
+
+                <button
+                    className={`nav-item ${currentView === 'configurator' ? 'active' : ''}`}
+                    onClick={() => onNavigate('configurator')}
+                >
+                    <Settings className="nav-icon" />
+                    Configuring Scanners
                 </button>
             </nav>
 

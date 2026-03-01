@@ -1,18 +1,18 @@
 .ingestion-container {
     max-width: 900px;
     margin: 0 auto;
-    padding: 20px 0;
+    padding: 12px 0;
 }
 
 .ingestion-header {
-    margin-bottom: 32px;
+    margin-bottom: 20px;
     text-align: center;
 }
 
 .ingestion-header h1 {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .subtitle {
@@ -23,22 +23,82 @@
 }
 
 .ingestion-panel {
-    padding: 32px;
+    padding: 24px 32px;
+}
+
+.success-toast {
+    position: fixed;
+    top: 90px;
+    right: 32px;
+    z-index: 1001;
+    background: var(--bg-secondary);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-md);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.25);
+    animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-content h4 {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.toast-content p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.toast-action {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    transition: all 0.2s;
+}
+
+.toast-action:hover {
+    background: rgba(16, 185, 129, 0.2);
+    transform: translateY(-1px);
 }
 
 .tabs {
     display: flex;
     gap: 16px;
-    margin-bottom: 32px;
+    margin-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 16px;
+    padding-bottom: 12px;
 }
 
 .tab {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 24px;
+    padding: 10px 20px;
     border-radius: var(--radius-md);
     color: var(--text-secondary);
     font-weight: 500;
@@ -52,8 +112,8 @@
 }
 
 .tab.active {
-    color: white;
-    background: var(--bg-tertiary);
+    color: var(--accent-primary-hover);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
 }
 
@@ -72,8 +132,8 @@
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .input-group label {
@@ -87,15 +147,18 @@
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    padding: 16px;
+    padding: 12px 16px;
     border-radius: var(--radius-md);
     font-family: inherit;
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.5;
     resize: vertical;
-    min-height: 200px;
     transition: all 0.2s ease;
     outline: none;
+}
+
+textarea.input-area {
+    min-height: 100px;
 }
 
 .input-area:focus {
@@ -135,7 +198,7 @@
 .form-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 32px;
+    margin-top: 20px;
 }
 
 .primary-btn {
