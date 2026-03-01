@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, ThumbsUp, ThumbsDown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, ThumbsUp, ThumbsDown, Zap, ChevronDown, ChevronUp, Trash2, Info } from 'lucide-react';
 import { HighlightedText } from '../ui/HighlightedText';
 import { parseGigRadarText } from '../../utils/parser';
 import './ConfiguratorView.css';
@@ -14,7 +14,7 @@ interface ScannedJob {
     dateRecorded: string;
 }
 
-export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }) {
+export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJobs?: any[], onDeleteJob?: (id: string) => void }) {
     const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [generatedBoolean, setGeneratedBoolean] = useState('');
@@ -24,6 +24,15 @@ export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }
         e.stopPropagation();
         setExpandedId(prev => prev === id ? null : id);
     };
+
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        setScannedJobs(prev => prev.filter(j => j.id !== id));
+        if (onDeleteJob) {
+            onDeleteJob(id);
+        }
+    };
+
     React.useEffect(() => {
         const loadFromStorage = () => {
             try {
@@ -129,7 +138,10 @@ export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
                                                 <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
                                             </h4>
-                                            <div style={{ color: 'var(--text-muted)' }}>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
+                                                <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">
+                                                    <Trash2 size={16} />
+                                                </button>
                                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </div>
                                         </div>
@@ -147,29 +159,77 @@ export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }
                                         )}
 
                                         {isExpanded && (
-                                            <div className="expanded-card-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                                                <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
+                                            <div className="expanded-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                                                <div className="raw-text-block" style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '24px', background: 'transparent', padding: 0, border: 'none' }}>
                                                     {(parsed.description || '').split('\n').map((line: string, i: number) => (
-                                                        <React.Fragment key={i}>
+                                                        <p key={i} style={{ marginBottom: line.trim() === '' ? '0' : '12px', minHeight: line.trim() === '' ? '12px' : 'auto', marginTop: 0 }}>
                                                             <HighlightedText text={line} booleanQuery={job.booleanSearch} />
-                                                            {i < (parsed.description || '').split('\n').length - 1 && <br />}
-                                                        </React.Fragment>
+                                                        </p>
                                                     ))}
                                                 </div>
 
                                                 {parsed.skills && parsed.skills.length > 0 && (
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                                                        {parsed.skills.map((s: string, i: number) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
+                                                    <div className="skills-container" style={{ marginBottom: '16px' }}>
+                                                        {parsed.skills.map((skill: string, idx: number) => (
+                                                            <span key={idx} className="skill-tag-bordered">{skill}</span>
+                                                        ))}
                                                     </div>
                                                 )}
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Budget</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.budget}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>GigRadar Score</div><div style={{ fontSize: '13px', fontWeight: 600 }}>📡 {parsed.gigRadarScore}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Experience</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.experienceLevel}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Duration</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.duration}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Country</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.clientCountry}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Spent</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.totalSpent}</div></div>
+                                                <div className="metrics-horizontal-grid">
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">📡 {parsed.gigRadarScore || '-'} <Info size={12} style={{ color: 'var(--text-muted)' }} /></span>
+                                                        <span className="metric-box-label">GigRadar Score</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.paymentType === 'Hourly' ? '-' : (parsed.budget && parsed.budget !== '-' ? parsed.budget : '-')}</span>
+                                                        <span className="metric-box-label">{parsed.paymentType || 'Budget'}</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.talentPreference || '-'}</span>
+                                                        <span className="metric-box-label">Talent Preference</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.experienceLevel || '-'}</span>
+                                                        <span className="metric-box-label">Experience Level</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.hourlyLoad || '-'}</span>
+                                                        <span className="metric-box-label">Hourly Load</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.duration || '-'}</span>
+                                                        <span className="metric-box-label">Duration</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.clientCountry === '-' ? '-' : parsed.clientCountry}</span>
+                                                        <span className="metric-box-label">Country</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.totalSpent || '-'}</span>
+                                                        <span className="metric-box-label">Total Spent</span>
+                                                    </div>
+
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.avgRatePaid || '-'}</span>
+                                                        <span className="metric-box-label">Avg Rate Paid</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.companySize || '-'}</span>
+                                                        <span className="metric-box-label">Company Size</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.paymentVerified ? 'Verified' : 'Unverified'}</span>
+                                                        <span className="metric-box-label">Payment Verified</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.memberSince || '-'}</span>
+                                                        <span className="metric-box-label">Member Since</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">⭐️ {parsed.clientFeedback && parsed.clientFeedback !== '-' ? parsed.clientFeedback : '-'}</span>
+                                                        <span className="metric-box-label">Client Feedback</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
@@ -195,7 +255,10 @@ export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
                                                 <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
                                             </h4>
-                                            <div style={{ color: 'var(--text-muted)' }}>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
+                                                <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">
+                                                    <Trash2 size={16} />
+                                                </button>
                                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </div>
                                         </div>
@@ -213,29 +276,77 @@ export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }
                                         )}
 
                                         {isExpanded && (
-                                            <div className="expanded-card-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                                                <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
+                                            <div className="expanded-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                                                <div className="raw-text-block" style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '24px', background: 'transparent', padding: 0, border: 'none' }}>
                                                     {(parsed.description || '').split('\n').map((line: string, i: number) => (
-                                                        <React.Fragment key={i}>
+                                                        <p key={i} style={{ marginBottom: line.trim() === '' ? '0' : '12px', minHeight: line.trim() === '' ? '12px' : 'auto', marginTop: 0 }}>
                                                             <HighlightedText text={line} booleanQuery={job.booleanSearch} />
-                                                            {i < (parsed.description || '').split('\n').length - 1 && <br />}
-                                                        </React.Fragment>
+                                                        </p>
                                                     ))}
                                                 </div>
 
                                                 {parsed.skills && parsed.skills.length > 0 && (
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                                                        {parsed.skills.map((s: string, i: number) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
+                                                    <div className="skills-container" style={{ marginBottom: '16px' }}>
+                                                        {parsed.skills.map((skill: string, idx: number) => (
+                                                            <span key={idx} className="skill-tag-bordered">{skill}</span>
+                                                        ))}
                                                     </div>
                                                 )}
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Budget</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.budget}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>GigRadar Score</div><div style={{ fontSize: '13px', fontWeight: 600 }}>📡 {parsed.gigRadarScore}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Experience</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.experienceLevel}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Duration</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.duration}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Country</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.clientCountry}</div></div>
-                                                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Spent</div><div style={{ fontSize: '13px', fontWeight: 600 }}>{parsed.totalSpent}</div></div>
+                                                <div className="metrics-horizontal-grid">
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">📡 {parsed.gigRadarScore || '-'} <Info size={12} style={{ color: 'var(--text-muted)' }} /></span>
+                                                        <span className="metric-box-label">GigRadar Score</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.paymentType === 'Hourly' ? '-' : (parsed.budget && parsed.budget !== '-' ? parsed.budget : '-')}</span>
+                                                        <span className="metric-box-label">{parsed.paymentType || 'Budget'}</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.talentPreference || '-'}</span>
+                                                        <span className="metric-box-label">Talent Preference</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.experienceLevel || '-'}</span>
+                                                        <span className="metric-box-label">Experience Level</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.hourlyLoad || '-'}</span>
+                                                        <span className="metric-box-label">Hourly Load</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.duration || '-'}</span>
+                                                        <span className="metric-box-label">Duration</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.clientCountry === '-' ? '-' : parsed.clientCountry}</span>
+                                                        <span className="metric-box-label">Country</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.totalSpent || '-'}</span>
+                                                        <span className="metric-box-label">Total Spent</span>
+                                                    </div>
+
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.avgRatePaid || '-'}</span>
+                                                        <span className="metric-box-label">Avg Rate Paid</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.companySize || '-'}</span>
+                                                        <span className="metric-box-label">Company Size</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.paymentVerified ? 'Verified' : 'Unverified'}</span>
+                                                        <span className="metric-box-label">Payment Verified</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">{parsed.memberSince || '-'}</span>
+                                                        <span className="metric-box-label">Member Since</span>
+                                                    </div>
+                                                    <div className="metric-box">
+                                                        <span className="metric-box-value">⭐️ {parsed.clientFeedback && parsed.clientFeedback !== '-' ? parsed.clientFeedback : '-'}</span>
+                                                        <span className="metric-box-label">Client Feedback</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
