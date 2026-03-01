@@ -23,21 +23,28 @@ function getScannerName() {
 }
 
 function getBooleanSearch() {
-    // 1. The Green Box in the screenshot - it is an input field, often bordered, beneath the scanner name
+    // 1. The Green Box in the screenshot - it is the SECOND input field, beneath the scanner name
     const inputs = Array.from(document.querySelectorAll('input.ant-input'));
+
+    // Based on the user's screenshot, if there are multiple inputs, the second one is the boolean search
+    if (inputs.length >= 2) {
+        const val = inputs[1].value || '';
+        if (val.length > 0) {
+            return val;
+        }
+    }
+
     let bestMatch = '';
 
-    // The boolean search is the input that typically has the most text or explicit boolean characters.
-    // However, if the user explicitly showed it's the second input, or the one containing the query...
+    // Fallback 1: Look through all ant-inputs for typical boolean operators just in case the layout changed
     for (let input of inputs) {
         const val = input.value || '';
-        // If it looks like a boolean query OR it's just a long string (like "real estate platform")
         if (val.length > 5 && (val.includes('(') || val.includes('|') || val.includes('"') || val.includes('AND') || val.includes('OR'))) {
             return val;
         }
     }
 
-    // Fallback: Grabbing the value of the most populated text input that IS NOT a tiny search bar
+    // Fallback 2: Grabbing the value of the most populated text input that IS NOT a tiny search bar
     let longestInput = '';
     for (let input of inputs) {
         const val = input.value || '';
@@ -50,7 +57,7 @@ function getBooleanSearch() {
         return longestInput;
     }
 
-    // 3. Fallback: Search ALL inputs if the specific class failed
+    // Fallback 3: Search ALL inputs if the specific class failed
     const allInputs = Array.from(document.querySelectorAll('input, textarea'));
     for (let input of allInputs) {
         const val = input.value || '';
@@ -157,30 +164,52 @@ function addButtonsToJobs() {
             <button class="revops-btn-match">Match</button>
         `;
 
-        const extractJobData = () => {
-            const headings = card.querySelectorAll('h1, h2, h3, h4, a[href*="job"]');
-            let title = 'Unknown Position';
-            if (headings.length > 0) {
-                title = headings[0].innerText.trim();
-            } else {
-                const lines = card.innerText.split('\\n').map(l => l.trim()).filter(l => l.length > 0);
-                if (lines.length > 0) title = lines[0];
+        const extractJobData = (callback) => {
+            // Find and click any "Expand" or "More" buttons to reveal full text before extracting
+            const expandButtons = Array.from(card.querySelectorAll('*')).filter(el => {
+                const text = el.innerText || '';
+                return (text.trim() === 'Expand' || text.trim() === 'More...') &&
+                    (el.tagName === 'A' || el.tagName === 'SPAN' || el.tagName === 'BUTTON');
+            });
+
+            if (expandButtons.length > 0) {
+                try {
+                    expandButtons[0].click();
+                } catch (e) {
+                    console.log("Could not click expand button", e);
+                }
             }
 
-            return {
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                title: title,
-                rawText: card.innerText,
-                scannerName: getScannerName(),
-                booleanSearch: getBooleanSearch(),
-                dateRecorded: new Date().toISOString()
-            };
+            // Small delay to let React render the expanded text
+            setTimeout(() => {
+                const headings = card.querySelectorAll('h1, h2, h3, h4, a[href*="job"]');
+                let title = 'Unknown Position';
+                if (headings.length > 0) {
+                    title = headings[0].innerText.trim();
+                } else {
+                    const lines = card.innerText.split('\\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (lines.length > 0) title = lines[0];
+                }
+
+                callback({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                    title: title,
+                    rawText: card.innerText,
+                    scannerName: getScannerName(),
+                    booleanSearch: getBooleanSearch(),
+                    dateRecorded: new Date().toISOString()
+                });
+            }, 100); // 100ms should be enough for a local DOM expansion
         };
 
         actionBar.querySelector('.revops-btn-match').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            saveJob(extractJobData(), true, actionBar.querySelector('.revops-status'));
+            const statusEl = actionBar.querySelector('.revops-status');
+            statusEl.innerText = 'Extracting...';
+            extractJobData((jobData) => {
+                saveJob(jobData, true, statusEl);
+            });
             actionBar.style.borderColor = '#10b981';
             actionBar.style.backgroundColor = '#ecfdf5';
         });
@@ -188,7 +217,11 @@ function addButtonsToJobs() {
         actionBar.querySelector('.revops-btn-no-match').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            saveJob(extractJobData(), false, actionBar.querySelector('.revops-status'));
+            const statusEl = actionBar.querySelector('.revops-status');
+            statusEl.innerText = 'Extracting...';
+            extractJobData((jobData) => {
+                saveJob(jobData, false, statusEl);
+            });
             actionBar.style.borderColor = '#ef4444';
             actionBar.style.backgroundColor = '#fef2f2';
         });
