@@ -7,7 +7,7 @@ import { DataView } from './components/data/DataView';
 import type { ParsedJob } from './utils/parser';
 import { IngestionView } from './components/ingestion/IngestionView';
 import { ConfiguratorView } from './components/configurator/ConfiguratorView';
-import { parseGigRadarText } from './utils/parser';
+import { parseGigRadarText, cleanJobTitle } from './utils/parser';
 
 export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator';
 
@@ -42,7 +42,7 @@ function App() {
                 if (!existingIds.has(match.id)) {
                   const parsed = parseGigRadarText(match.rawText) as ParsedJob;
                   parsed.id = match.id;
-                  parsed.title = match.title || parsed.title;
+                  parsed.title = cleanJobTitle(match.title || parsed.title);
                   parsed.scannerName = match.scannerName || parsed.scannerName;
                   parsed.booleanSearch = match.booleanSearch || '';
                   parsed.matchScore = 10; // Explicit match from extension is a 10

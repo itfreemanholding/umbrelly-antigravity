@@ -27,6 +27,13 @@ export interface ParsedJob {
     rawText: string;
 }
 
+export function cleanJobTitle(title: string): string {
+    if (!title) return '';
+    let cleaned = title.replace(/(?:\s*[-,|]?\s*)(?:a|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
+    cleaned = cleaned.replace(/(?:\s*[-,|]?\s*)(?:just now|today|yesterday)[\s\S]*$/i, '').trim();
+    return cleaned;
+}
+
 export function parseGigRadarText(text: string): Partial<ParsedJob> {
     if (!text) return {};
 
@@ -39,8 +46,7 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
     }
 
     // Clean up title (remove trailing timestamps like '21 days ago' regardless of invisible characters)
-    let title = lines[0].replace(/(?:\s*[-,|]?\s*)(?:a|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
-    title = title.replace(/(?:\s*[-,|]?\s*)(?:just now|today|yesterday)[\s\S]*$/i, '').trim();
+    let title = cleanJobTitle(lines[0]);
 
     // Build description from rawLines to preserve formatting
     let descriptionRawLines: string[] = [];
