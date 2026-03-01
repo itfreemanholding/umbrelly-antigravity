@@ -191,6 +191,10 @@ function addButtonsToJobs() {
                     if (lines.length > 0) title = lines[0];
                 }
 
+                // Aggressively strip trailing upwork timestamps
+                title = title.replace(/(?:\s*[-,|]?\s*)(?:Posted\s*)?(?:about\s+|over\s+|almost\s+)?(?:a|an|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
+                title = title.replace(/(?:\s*[-,|]?\s*)(?:just now|today|yesterday)[\s\S]*$/i, '').trim();
+
                 callback({
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                     title: title,

@@ -29,7 +29,7 @@ export interface ParsedJob {
 
 export function cleanJobTitle(title: string): string {
     if (!title) return '';
-    let cleaned = title.replace(/(?:\s*[-,|]?\s*)(?:a|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
+    let cleaned = title.replace(/(?:\s*[-,|]?\s*)(?:Posted\s*)?(?:about\s+|over\s+|almost\s+)?(?:a|an|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
     cleaned = cleaned.replace(/(?:\s*[-,|]?\s*)(?:just now|today|yesterday)[\s\S]*$/i, '').trim();
     return cleaned;
 }
@@ -147,7 +147,7 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
     // clean up stray timestamps at the start of the description like "a month ago" or "2 days ago"
     if (descriptionRawLines.length > 0) {
         const firstLine = descriptionRawLines[0].trim().toLowerCase();
-        if (firstLine.match(/^(a|\d+)\s+(minute|hour|day|month|year)s?\s+ago$/)) {
+        if (firstLine.match(/^(?:posted\s*)?(?:about\s+|over\s+|almost\s+)?(a|an|\d+)\s+(minute|hour|day|month|year)s?\s+ago$/)) {
             descriptionRawLines.shift();
 
             // shift again if there's an empty line following the timestamp
