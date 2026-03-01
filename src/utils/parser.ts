@@ -38,7 +38,9 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
         return { title: 'Unknown Title', scannerName: 'Unknown Scanner', description: text };
     }
 
-    const title = lines[0];
+    // Clean up title (remove trailing timestamps like '21 days ago')
+    let title = lines[0].replace(/\s+\d+\s+(days|hours|minutes|months)\s+ago\s*$/i, '').trim();
+
     // Build description from rawLines to preserve formatting
     let descriptionRawLines: string[] = [];
     let skills: string[] = [];
@@ -134,6 +136,20 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
     while (descriptionRawLines.length > 0 && descriptionRawLines[0].trim() === '') {
         descriptionRawLines.shift();
     }
+
+    // clean up stray timestamps at the start of the description like "a month ago" or "2 days ago"
+    if (descriptionRawLines.length > 0) {
+        const firstLine = descriptionRawLines[0].trim().toLowerCase();
+        if (firstLine.match(/^(a|\d+)\s+(minute|hour|day|month|year)s?\s+ago$/)) {
+            descriptionRawLines.shift();
+
+            // shift again if there's an empty line following the timestamp
+            while (descriptionRawLines.length > 0 && descriptionRawLines[0].trim() === '') {
+                descriptionRawLines.shift();
+            }
+        }
+    }
+
     const description = descriptionRawLines.join('\n');
 
     // Determine Cloud Tag based on title and description content

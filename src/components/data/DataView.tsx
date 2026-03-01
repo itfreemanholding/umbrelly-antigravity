@@ -255,7 +255,9 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
                                                 </div>
                                             </td>
                                             <td className="col-date">
-                                                <div className="metric-text">{job.dateIngested}</div>
+                                                <div className="metric-text">
+                                                    {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(job.dateIngested))}
+                                                </div>
                                                 <div className="text-muted text-xs">{job.postedTimeAgo !== 'Just now' ? job.postedTimeAgo : ''}</div>
                                             </td>
                                             <td className="col-actions">
