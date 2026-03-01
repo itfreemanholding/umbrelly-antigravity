@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, ThumbsUp, ThumbsDown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { HighlightedText } from '../ui/HighlightedText';
 import { parseGigRadarText } from '../../utils/parser';
 import './ConfiguratorView.css';
 
@@ -13,7 +14,7 @@ interface ScannedJob {
     dateRecorded: string;
 }
 
-export function ConfiguratorView() {
+export function ConfiguratorView({ approvedJobs = [] }: { approvedJobs?: any[] }) {
     const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [generatedBoolean, setGeneratedBoolean] = useState('');
@@ -54,7 +55,7 @@ export function ConfiguratorView() {
         }, 2000);
     };
 
-    const matches = scannedJobs.filter(j => j.isMatch);
+    const matches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
     const rejections = scannedJobs.filter(j => !j.isMatch);
 
     return (
@@ -125,7 +126,9 @@ export function ConfiguratorView() {
                                 return (
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                            <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>{parsed.title || job.title}</h4>
+                                            <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
+                                                <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
+                                            </h4>
                                             <div style={{ color: 'var(--text-muted)' }}>
                                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </div>
@@ -146,12 +149,17 @@ export function ConfiguratorView() {
                                         {isExpanded && (
                                             <div className="expanded-card-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
                                                 <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
-                                                    {parsed.description}
+                                                    {(parsed.description || '').split('\n').map((line: string, i: number) => (
+                                                        <React.Fragment key={i}>
+                                                            <HighlightedText text={line} booleanQuery={job.booleanSearch} />
+                                                            {i < (parsed.description || '').split('\n').length - 1 && <br />}
+                                                        </React.Fragment>
+                                                    ))}
                                                 </div>
 
                                                 {parsed.skills && parsed.skills.length > 0 && (
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                                                        {parsed.skills.map((s, i) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
+                                                        {parsed.skills.map((s: string, i: number) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
                                                     </div>
                                                 )}
 
@@ -184,7 +192,9 @@ export function ConfiguratorView() {
                                 return (
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                            <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>{parsed.title || job.title}</h4>
+                                            <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
+                                                <HighlightedText text={parsed.title || job.title} booleanQuery={job.booleanSearch} />
+                                            </h4>
                                             <div style={{ color: 'var(--text-muted)' }}>
                                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                             </div>
@@ -205,12 +215,17 @@ export function ConfiguratorView() {
                                         {isExpanded && (
                                             <div className="expanded-card-content fade-in" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
                                                 <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>
-                                                    {parsed.description}
+                                                    {(parsed.description || '').split('\n').map((line: string, i: number) => (
+                                                        <React.Fragment key={i}>
+                                                            <HighlightedText text={line} booleanQuery={job.booleanSearch} />
+                                                            {i < (parsed.description || '').split('\n').length - 1 && <br />}
+                                                        </React.Fragment>
+                                                    ))}
                                                 </div>
 
                                                 {parsed.skills && parsed.skills.length > 0 && (
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                                                        {parsed.skills.map((s, i) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
+                                                        {parsed.skills.map((s: string, i: number) => <span key={i} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '12px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>{s}</span>)}
                                                     </div>
                                                 )}
 

@@ -9,57 +9,7 @@ interface DataViewProps {
     onUpdateJob: (job: ParsedJob) => void;
 }
 
-function parseBooleanQuery(query: string) {
-    const terms: { term: string, isWildcard: boolean }[] = [];
-    const quotedRegex = /"([^"]+)"/g;
-    let match;
-    let raw = query;
-    while ((match = quotedRegex.exec(query)) !== null) {
-        terms.push({ term: match[1], isWildcard: false });
-        raw = raw.replace(match[0], ' ');
-    }
-    const words = raw.replace(/[()|]/g, ' ').split(/\s+/).filter(w => w.length > 0 && w.toUpperCase() !== 'AND' && w.toUpperCase() !== 'OR' && w.toUpperCase() !== 'NOT');
-    for (const word of words) {
-        if (word.endsWith('*')) {
-            terms.push({ term: word.slice(0, -1), isWildcard: true });
-        } else {
-            terms.push({ term: word, isWildcard: false });
-        }
-    }
-    return terms;
-}
-
-function HighlightedText({ text, booleanQuery }: { text: string, booleanQuery?: string }) {
-    if (!booleanQuery) return <>{text}</>;
-
-    const terms = parseBooleanQuery(booleanQuery).sort((a, b) => b.term.length - a.term.length);
-    if (terms.length === 0) return <>{text}</>;
-
-    const escapeRegExp = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const regexParts = terms.map(t => {
-        if (t.isWildcard) {
-            return `\\b${escapeRegExp(t.term)}\\w*`;
-        } else {
-            return `\\b${escapeRegExp(t.term)}\\b`;
-        }
-    });
-    const regex = new RegExp(`(${regexParts.join('|')})`, 'gi');
-
-    const chunks = text.split(regex);
-
-    return (
-        <React.Fragment>
-            {chunks.map((chunk, i) => {
-                if (!chunk) return null;
-                if (chunk.match(new RegExp(`^${regex.source}$`, 'i'))) {
-                    return <span key={i} style={{ backgroundColor: '#FFEB3B', color: '#000', fontWeight: '500', borderRadius: '2px', padding: '0 2px' }}>{chunk}</span>;
-                }
-                return chunk;
-            })}
-        </React.Fragment>
-    );
-}
+import { HighlightedText } from '../ui/HighlightedText';
 
 const CloudLogo = ({ tag }: { tag: string }) => {
     if (tag === 'AWS') return <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" height="14" alt="AWS" style={{ marginRight: '4px', verticalAlign: 'middle' }} />

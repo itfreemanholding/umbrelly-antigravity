@@ -143,7 +143,7 @@ function App() {
           />
         )}
         {appState === 'scanner' && <ScannerView />}
-        {appState === 'configurator' && <ConfiguratorView />}
+        {appState === 'configurator' && <ConfiguratorView approvedJobs={savedJobs} />}
         {appState === 'data' && <DataView jobs={savedJobs} onDeleteJob={handleDeleteJob} onUpdateJob={handleUpdateJob} />}
       </Layout>
     </div>
