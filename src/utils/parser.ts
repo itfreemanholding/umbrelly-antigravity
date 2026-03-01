@@ -38,8 +38,9 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
         return { title: 'Unknown Title', scannerName: 'Unknown Scanner', description: text };
     }
 
-    // Clean up title (remove trailing timestamps like '21 days ago')
-    let title = lines[0].replace(/\s+\d+\s+(days|hours|minutes|months)\s+ago\s*$/i, '').trim();
+    // Clean up title (remove trailing timestamps like '21 days ago' or 'a month ago')
+    let title = lines[0].replace(/(?:\s*[-,|]?\s*)(?:a|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago\s*$/i, '').trim();
+    title = title.replace(/(?:\s*[-,|]?\s*)(?:just now|today|yesterday)\s*$/i, '').trim();
 
     // Build description from rawLines to preserve formatting
     let descriptionRawLines: string[] = [];

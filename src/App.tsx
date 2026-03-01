@@ -100,6 +100,16 @@ function App() {
 
   const handleDeleteJob = (id: string) => {
     setSavedJobs(prev => prev.filter(job => job.id !== id));
+
+    // Also remove from extension sync if it exists there, so it doesn't resurrect on reload
+    try {
+      const extData = localStorage.getItem('revops_extension_sync');
+      if (extData) {
+        let extJobs = JSON.parse(extData);
+        extJobs = extJobs.filter((j: any) => j.id !== id);
+        localStorage.setItem('revops_extension_sync', JSON.stringify(extJobs));
+      }
+    } catch (err) { }
   };
 
   const handleUpdateJob = (updatedJob: ParsedJob) => {
