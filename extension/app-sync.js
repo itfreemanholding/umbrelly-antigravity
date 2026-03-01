@@ -4,7 +4,22 @@
 
 function syncToApp() {
     chrome.storage.local.get(['scannedJobs'], (result) => {
-        const jobs = result.scannedJobs || [];
+        let jobs = result.scannedJobs || [];
+
+        let modified = false;
+        jobs = jobs.map(j => {
+            const cleanedTitle = j.title.replace(/(?:\s*[-,|]?\s*)(?:Posted\s*)?(?:about\s+|over\s+|almost\s+)?(?:a|an|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago[\s\S]*$/i, '').trim();
+            if (cleanedTitle !== j.title) {
+                modified = true;
+                return { ...j, title: cleanedTitle };
+            }
+            return j;
+        });
+
+        if (modified) {
+            chrome.storage.local.set({ scannedJobs: jobs });
+        }
+
         // Inject directly into the app's localStorage
         window.localStorage.setItem('revops_extension_sync', JSON.stringify(jobs));
         // Dispatch a storage event so React state can update in real time

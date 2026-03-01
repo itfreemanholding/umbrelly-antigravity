@@ -16,7 +16,34 @@ function App() {
   const [extractedData, setExtractedData] = useState<any>(null);
   const [savedJobs, setSavedJobs] = useState<ParsedJob[]>(() => {
     const localData = localStorage.getItem('revops_saved_jobs');
-    return localData ? JSON.parse(localData) : [];
+    if (!localData) return [];
+
+    try {
+      const rawJobs: ParsedJob[] = JSON.parse(localData);
+
+      const migratedJobs = rawJobs.map(job => {
+        const cleanedTitle = cleanJobTitle(job.title);
+
+        // Simple fast description cleanup for existing legacy data
+        const origDesc = job.description.trim();
+        const cleanedDesc = origDesc.replace(/^(?:posted\s*)?(?:about\s+|over\s+|almost\s+)?(?:a|an|\d+)\s+(?:second|minute|hour|day|month|year)s?\s+ago\n+/i, '').trim();
+
+        if (cleanedTitle !== job.title || cleanedDesc !== origDesc) {
+          return {
+            ...job,
+            title: cleanedTitle,
+            description: cleanedDesc || job.description
+          };
+        }
+        return job;
+      });
+
+      // The useEffect will save this migrated state automatically on first render if it changed
+      return migratedJobs;
+    } catch (e) {
+      console.error("Failed to parse local jobs data", e);
+      return [];
+    }
   });
 
   useEffect(() => {

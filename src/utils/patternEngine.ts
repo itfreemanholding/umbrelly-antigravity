@@ -29,7 +29,8 @@ export function runPatternEngine(matches: any[], rejections: any[]): GeneratedBo
         'expert', 'developer', 'development', 'design', 'designer', 'some', 'more', 'than', 'time', 'years', 'good', 'best',
         'like', 'just', 'know', 'how', 'into', 'only', 'also', 'which', 'their', 'must', 'such', 'other', 'through', 'these',
         'those', 'then', 'make', 'them', 'over', 'very', 'well', 'even', 'most', 'want', 'sure', 'been', 'were', 'does', 'much',
-        'can', 'because', 'our', 'any', 'are', 'and', 'the', 'for', 'not'
+        'can', 'because', 'our', 'any', 'are', 'and', 'the', 'for', 'not',
+        'days', 'hours', 'months', 'weeks', 'today', 'yesterday', 'posted', 'month', 'hour', 'week', 'ago'
     ]);
 
     const tokenize = (text: string) => (text.toLowerCase().match(/\b[a-z]{4,}\b/g) || []).filter(w => !stopWords.has(w));
