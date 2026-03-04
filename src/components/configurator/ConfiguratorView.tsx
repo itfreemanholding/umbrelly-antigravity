@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Settings, ThumbsUp, ThumbsDown, Zap, ChevronDown, ChevronUp, Trash2, Info } from 'lucide-react';
+import { Settings, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Trash2, Info } from 'lucide-react';
 import { HighlightedText } from '../ui/HighlightedText';
 import { parseGigRadarText } from '../../utils/parser';
-import { runPatternEngine, type GeneratedBoolean } from '../../utils/patternEngine';
+import type { GeneratedBoolean } from '../../utils/patternEngine';
 import './ConfiguratorView.css';
 
 interface ScannedJob {
@@ -15,10 +15,21 @@ interface ScannedJob {
     dateRecorded: string;
 }
 
-export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJobs?: any[], onDeleteJob?: (id: string) => void }) {
+import { PatternEngineUI } from './PatternEngineUI';
+import type { SavedIdea } from '../scanner-ideas/ScannerIdeasView';
+
+interface ConfiguratorViewProps {
+    approvedJobs?: any[];
+    onDeleteJob?: (id: string) => void;
+    onSaveIdea?: (idea: SavedIdea) => void;
+}
+
+export const ConfiguratorView: React.FC<ConfiguratorViewProps> = ({
+    approvedJobs = [],
+    onDeleteJob,
+    onSaveIdea
+}) => {
     const [scannedJobs, setScannedJobs] = useState<ScannedJob[]>([]);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [generatedBooleans, setGeneratedBooleans] = useState<GeneratedBoolean[]>([]);
     const [testedStrategy, setTestedStrategy] = useState<GeneratedBoolean | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -55,23 +66,11 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
         return () => window.removeEventListener('storage', loadFromStorage);
     }, []);
 
-    const baseMatches = approvedJobs.length > 0 ? approvedJobs : scannedJobs.filter(j => j.isMatch);
-    const baseRejections = scannedJobs.filter(j => !j.isMatch);
+    const baseMatches = approvedJobs.length > 0 ? approvedJobs.filter(j => j.matchScore && j.matchScore >= 5) : scannedJobs.filter(j => j.isMatch);
+    const baseRejections = approvedJobs.length > 0 ? approvedJobs.filter(j => !j.matchScore || j.matchScore < 5) : scannedJobs.filter(j => !j.isMatch);
 
     const matches = testedStrategy ? baseMatches.filter(m => testedStrategy.matchedIds.includes(m.id)) : baseMatches;
     const rejections = testedStrategy ? baseRejections.filter(r => testedStrategy.matchedIds.includes(r.id)) : baseRejections;
-
-    const runAnalysis = () => {
-        setIsAnalyzing(true);
-        setGeneratedBooleans([]);
-
-        // Simulate AI analysis delay
-        setTimeout(() => {
-            setIsAnalyzing(false);
-            const results = runPatternEngine(matches, rejections);
-            setGeneratedBooleans(results);
-        }, 2000);
-    };
 
     return (
         <div className="configurator-container fade-in-up">
@@ -91,72 +90,13 @@ export function ConfiguratorView({ approvedJobs = [], onDeleteJob }: { approvedJ
             </div>
 
             <div className="configurator-dashboard">
-                <div className="analysis-panel glass-panel">
-                    <div className="panel-header">
-                        <h3>Pattern Analysis Engine</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
-                            We compare your {matches.length} matches against {rejections.length} rejections to find the optimal search criteria.
-                        </p>
-                    </div>
-
-                    <div className="analysis-actions">
-                        <button
-                            className="primary-btn pulse-glow"
-                            onClick={runAnalysis}
-                            disabled={scannedJobs.length === 0 || isAnalyzing}
-                            style={{ width: '100%', justifyContent: 'center', padding: '16px' }}
-                        >
-                            {isAnalyzing ? (
-                                <>Processing NLP Models...</>
-                            ) : (
-                                <>
-                                    <Zap size={20} />
-                                    Analyze Patterns & Generate Boolean
-                                </>
-                            )}
-                        </button>
-                    </div>
-
-                    {generatedBooleans.length > 0 && !isAnalyzing && (
-                        <div className="generated-results fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-                            <h4 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '15px' }}>Optimized GigRadar Booleans:</h4>
-
-                            {generatedBooleans.map((gb, idx) => (
-                                <div key={idx} className="glass-panel stagger-1" style={{ padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', animationDelay: `${idx * 0.15}s` }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
-                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>Strategy Option {idx + 1}</div>
-                                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', background: 'var(--bg-tertiary)', padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                                            <span style={{ color: 'var(--success)' }}>
-                                                Includes Matches: <strong style={{ marginLeft: '4px' }}>{gb.matchesIncluded}/{gb.matchesTotal}</strong>
-                                            </span>
-                                            <span style={{ color: 'var(--danger)' }}>
-                                                Excludes Rejections: <strong style={{ marginLeft: '4px' }}>{gb.rejectionsExcluded}/{gb.rejectionsTotal}</strong>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="boolean-code-block" style={{ margin: 0, background: 'var(--bg-primary)' }}>
-                                        <code style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>{gb.query}</code>
-                                    </div>
-                                    <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-                                        <button
-                                            className="secondary-btn"
-                                            onClick={() => setTestedStrategy(testedStrategy === gb ? null : gb)}
-                                            style={{
-                                                fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px',
-                                                background: testedStrategy === gb ? 'var(--accent-primary)' : 'transparent',
-                                                color: testedStrategy === gb ? '#fff' : 'var(--text-primary)',
-                                                borderColor: testedStrategy === gb ? 'var(--accent-primary)' : 'var(--border-color)'
-                                            }}
-                                        >
-                                            <Zap size={14} />
-                                            {testedStrategy === gb ? 'Clear Test Filter' : 'Test Strategy on Data'}
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                <PatternEngineUI
+                    approvedJobs={approvedJobs}
+                    scannedJobs={scannedJobs}
+                    testedStrategy={testedStrategy}
+                    setTestedStrategy={setTestedStrategy}
+                    onSaveIdea={onSaveIdea}
+                />
 
                 <div className="lists-container">
                     <div className="job-list-col match-col">

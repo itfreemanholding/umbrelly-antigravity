@@ -46,11 +46,11 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
     }
 
     // Clean up title (remove trailing timestamps like '21 days ago' regardless of invisible characters)
-    let title = cleanJobTitle(lines[0]);
+    const title = cleanJobTitle(lines[0]);
 
     // Build description from rawLines to preserve formatting
-    let descriptionRawLines: string[] = [];
-    let skills: string[] = [];
+    const descriptionRawLines: string[] = [];
+    const skills: string[] = [];
     let budget = '-';
     let duration = '-';
     let totalSpent = '-';
@@ -192,4 +192,65 @@ export function parseGigRadarText(text: string): Partial<ParsedJob> {
         cloudTag,
         rawText: text
     };
+}
+
+export function cleanJobText(rawText: string): string {
+    if (!rawText) return '';
+
+    let cleanedText = stripTimestamps(rawText);
+
+    // The GigRadar footer usually starts with the score or "More...".
+    // We can look for keywords like "GigRadar Score", "Talent Preference", "Total Spent"
+    // A robust way is finding the common delimiter or the first occurrence of these specific metadata blocks.
+
+    // Pattern to catch the start of the typical footer block (e.g. "📡 38%\nGigRadar Score")
+    // or just the "GigRadar Score" text itself which is highly specific.
+    const gigRadarIndex = cleanedText.search(/GigRadar Score/i);
+
+    // Also look for "Extracting..." or "Less than \d+ month" blocks.
+    if (gigRadarIndex !== -1) {
+        // Find a safe cutoff point before the score, e.g. looking backwards for a newline or "More..."
+        const cutoff = cleanedText.substring(0, gigRadarIndex).lastIndexOf('More...');
+        if (cutoff !== -1 && (gigRadarIndex - cutoff) < 50) {
+            return stripUiTags(cleanedText.substring(0, cutoff).trim());
+        }
+
+        // If "More..." isn't immediately preceding, just cut a bit before the score
+        // The score often looks like "📡 38%\nGigRadar Score"
+        const fallbackCutoff = cleanedText.lastIndexOf('\n', gigRadarIndex - 5);
+        if (fallbackCutoff !== -1) {
+            return stripUiTags(cleanedText.substring(0, fallbackCutoff).trim());
+        }
+
+        return stripUiTags(cleanedText.substring(0, gigRadarIndex).trim());
+    }
+
+    // Fallback: If "GigRadar Score" isn't found but "Talent Preference" or "Total Spent" is:
+    const altCutoff = cleanedText.search(/(Talent Preference|Total Spent|Company Size|Client Feedback|Extracting\.\.\.)/i);
+    if (altCutoff !== -1) {
+        const fallbackCutoff2 = cleanedText.lastIndexOf('\n', altCutoff);
+        if (fallbackCutoff2 !== -1) return stripUiTags(cleanedText.substring(0, fallbackCutoff2).trim());
+        return stripUiTags(cleanedText.substring(0, altCutoff).trim());
+    }
+
+    return stripUiTags(cleanedText.trim());
+}
+
+function stripTimestamps(text: string): string {
+    if (!text) return text;
+    let cleaned = text;
+    // Remove lines that are just dates like "a month ago", "21 days ago", "just now", "yesterday", "today"
+    // Using multiline flag so ^ matches start of a line
+    cleaned = cleaned.replace(/^[ \t]*(?:Posted\s*)?(?:about\s+|over\s+|almost\s+)?(?:a|an|\d+)\s+(?:second|minute|hour|day|week|month|year)s?\s+ago[ \t]*\n/gmi, '');
+    cleaned = cleaned.replace(/^[ \t]*(?:just now|today|yesterday)[ \t]*\n/gmi, '');
+    return cleaned;
+}
+
+function stripUiTags(text: string): string {
+    if (!text) return text;
+    let cleaned = text;
+    // Remove hanging "More..." or "Less" words commonly found at the bottom of the visible job description
+    cleaned = cleaned.replace(/(?:^|\n)(?:More\.\.\.|Less)\s*$/i, '');
+    cleaned = cleaned.replace(/(?:^|\n)(?:More\.\.\.|Less)\s*$/i, ''); // run twice if both exist
+    return cleaned.trim();
 }
