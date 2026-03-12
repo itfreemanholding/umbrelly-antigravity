@@ -3,7 +3,7 @@ import { Mail, Megaphone, Share2, Youtube, RefreshCw, ChevronRight, Copy, CheckC
 import './OutputDashboard.css';
 
 interface OutputDashboardProps {
-    data: any;
+    data?: any;
     onReset: () => void;
 }
 
@@ -86,7 +86,11 @@ Here's a 3-step audit you can run today to save thousands:`
             <div className="output-header">
                 <div>
                     <h2 className="text-gradient">Generated Assets</h2>
-                    <p className="subtitle">Extracted Needs: {data.needs.join(', ')}</p>
+                    {data && data.needs ? (
+                        <p className="subtitle">Extracted Needs: {data.needs.join(', ')}</p>
+                    ) : (
+                        <p className="subtitle">Example outreach and marketing assets for your campaigns.</p>
+                    )}
                 </div>
                 <button className="secondary-btn" onClick={onReset}>
                     <RefreshCw size={16} />

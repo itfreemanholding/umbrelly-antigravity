@@ -113,7 +113,7 @@ export const ConfiguratorView: React.FC<ConfiguratorViewProps> = ({
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
-                                                <HighlightedText text={parsed.title || job.title} booleanQuery={testedStrategy?.query || job.booleanSearch} />
+                                                <HighlightedText text={(job.title && job.title !== 'Unknown Title') ? job.title : (parsed.title || job.title)} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                             </h4>
                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
                                                 <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">
@@ -231,7 +231,7 @@ export const ConfiguratorView: React.FC<ConfiguratorViewProps> = ({
                                     <div key={job.id} className="job-card glass-panel" style={{ cursor: 'pointer', transition: 'all 0.2s', padding: isExpanded ? '20px' : '16px' }} onClick={(e) => toggleExpand(job.id, e)}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <h4 style={{ margin: '0 0 8px 0', lineHeight: 1.4, fontSize: '14px' }}>
-                                                <HighlightedText text={parsed.title || job.title} booleanQuery={testedStrategy?.query || job.booleanSearch} />
+                                                <HighlightedText text={(job.title && job.title !== 'Unknown Title') ? job.title : (parsed.title || job.title)} booleanQuery={testedStrategy?.query || job.booleanSearch} />
                                             </h4>
                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--text-muted)' }}>
                                                 <button onClick={(e) => handleDelete(e, job.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-muted)', display: 'flex' }} title="Delete Job" className="danger-hover icon-btn">

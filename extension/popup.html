@@ -79,11 +79,49 @@
         .btn-outline:hover {
             background: #fef2f2;
         }
+
+        .project-selector {
+            margin-bottom: 20px;
+        }
+
+        .project-selector label {
+            display: block;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .project-selector select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: #f8fafc;
+            font-size: 14px;
+            color: #1e293b;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .project-selector select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
     </style>
 </head>
 
 <body>
     <h2>Scanner Sync Hub</h2>
+    
+    <div class="project-selector">
+        <label for="project-select">Active Project Destination</label>
+        <select id="project-select">
+            <option value="loading">Loading projects...</option>
+        </select>
+    </div>
+
     <div class="stats">
         <div class="stat-box">
             <div id="count-matches" class="stat-val" style="color: #10b981;">0</div>

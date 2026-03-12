@@ -69,15 +69,13 @@ export function IngestionView({ onSubmit, onNavigateToData }: IngestionViewProps
                         <p>The job data and metrics have been extracted and saved.</p>
                     </div>
                     {onNavigateToData && (
-                        <a
-                            href="?view=data"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="toast-action"
-                            style={{ textDecoration: 'none' }}
+                        <button
+                            onClick={onNavigateToData}
+                            className="toast-action primary-btn"
+                            style={{ padding: '8px 16px', fontSize: '0.9rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
                         >
                             View in Data Hub
-                        </a>
+                        </button>
                     )}
                 </div>
             )}
@@ -123,7 +121,7 @@ export function IngestionView({ onSubmit, onNavigateToData }: IngestionViewProps
                         <div className="ingestion-metadata" style={{ marginTop: '12px' }}>
                             <div className="input-row" style={{ display: 'flex', gap: '16px' }}>
                                 <div className="input-group flex-1" style={{ flex: 1 }}>
-                                    <label>Initial Match Score: {matchScore}/10</label>
+                                    <label>Initial Match Score</label>
                                     <div className="rating-slider-container" style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
                                         <input
                                             type="range"

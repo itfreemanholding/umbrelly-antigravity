@@ -76,11 +76,14 @@ function saveJob(jobData, isMatch, statusEl) {
         if (response && response.success) {
             statusEl.innerText = '✅ Saved';
             statusEl.style.color = '#10b981';
+        } else if (response && response.error === 'NO_PROJECT_SELECTED') {
+            statusEl.innerText = '❌ Select Project first';
+            statusEl.style.color = '#ef4444';
         } else {
             statusEl.innerText = '❌ Error';
             statusEl.style.color = '#ef4444';
         }
-        setTimeout(() => { statusEl.innerText = ''; }, 2000);
+        setTimeout(() => { statusEl.innerText = ''; }, 3000);
     });
 }
 

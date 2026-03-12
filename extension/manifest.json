@@ -10,7 +10,8 @@
     ],
     "host_permissions": [
         "*://*.gigradar.io/*",
-        "*://*.upwork.com/*"
+        "*://*.upwork.com/*",
+        "http://localhost:3001/*"
     ],
     "content_scripts": [
         {

@@ -70,9 +70,11 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
             result = result.filter(job =>
-                job.title.toLowerCase().includes(lowerSearch) ||
-                job.description.toLowerCase().includes(lowerSearch) ||
-                (job.cloudTag && job.cloudTag.toLowerCase().includes(lowerSearch))
+                (job.title?.toLowerCase().includes(lowerSearch)) ||
+                (job.clientCountry?.toLowerCase().includes(lowerSearch)) ||
+                (job.cloudTag?.toLowerCase().includes(lowerSearch)) ||
+                (job.memo?.toLowerCase().includes(lowerSearch)) ||
+                (job.booleanSearch?.toLowerCase().includes(lowerSearch))
             );
         }
 
@@ -83,10 +85,32 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
                         ? a.matchScore - b.matchScore
                         : b.matchScore - a.matchScore;
                 } else {
-                    // Simple string compare for dates since they might be "Just now" or formatted strings
+                    // Helper to get absolute time for sorting
+                    const getTimestamp = (job: ParsedJob) => {
+                        const d = new Date(job.dateIngested); // baseline is ingestion time
+                        if (!job.postedTimeAgo || job.postedTimeAgo === 'Just now') return d.getTime();
+                        
+                        const match = job.postedTimeAgo.match(/(\d+)\s+(year|month|day|hour|minute)s?\s+ago/i);
+                        if (match) {
+                            const num = parseInt(match[1]);
+                            const unit = match[2].toLowerCase();
+                            if (unit === 'year') d.setFullYear(d.getFullYear() - num);
+                            else if (unit === 'month') d.setMonth(d.getMonth() - num);
+                            else if (unit === 'day') d.setDate(d.getDate() - num);
+                            else if (unit === 'hour') d.setHours(d.getHours() - num);
+                            else if (unit === 'minute') d.setMinutes(d.getMinutes() - num);
+                        } else if (job.postedTimeAgo.toLowerCase() === 'yesterday') {
+                            d.setDate(d.getDate() - 1);
+                        }
+                        return d.getTime();
+                    };
+
+                    const timeA = getTimestamp(a);
+                    const timeB = getTimestamp(b);
+
                     return sortConfig.direction === 'asc'
-                        ? a.dateIngested.localeCompare(b.dateIngested)
-                        : b.dateIngested.localeCompare(a.dateIngested);
+                        ? timeA - timeB
+                        : timeB - timeA;
                 }
             });
         }
@@ -196,19 +220,62 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
                                                 </span>
                                             </td>
                                             <td className="col-budget">
-                                                <div className="metric-text" style={{ fontSize: '14px', fontWeight: 500 }}>{job.paymentType || 'Not specified'}</div>
-                                                <div className="text-muted text-xs">{job.budget && job.budget !== '-' ? job.budget : 'Not mentioned'}</div>
+                                                <div className="metric-text" style={{ fontSize: '14px', fontWeight: 500 }}>{(!job.paymentType || job.paymentType === '-') ? 'Unspecified Rate' : job.paymentType}</div>
+                                                <div className="text-muted text-xs">{job.budget && job.budget !== '-' ? job.budget : 'Budget unassigned'}</div>
                                             </td>
                                             <td className="col-client">
-                                                <div className="metric-text" style={{ fontSize: '18px' }} title={job.clientCountry}>
-                                                    {job.clientCountry} {job.paymentVerified && <span style={{ fontSize: '12px', color: 'var(--success)' }}>✓</span>}
+                                                <div className="metric-text" style={{ fontSize: '16px' }} title={job.clientCountry}>
+                                                    {(!job.clientCountry || job.clientCountry === '-') ? 'Unknown Location' : job.clientCountry} {job.paymentVerified && <span style={{ fontSize: '12px', color: 'var(--success)' }}>✓</span>}
                                                 </div>
                                             </td>
                                             <td className="col-date">
                                                 <div className="metric-text">
-                                                    {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(job.dateIngested))}
+                                                    {(() => {
+                                                        const timeAgo = job.postedTimeAgo && job.postedTimeAgo !== 'Just now' ? job.postedTimeAgo : 'Just now';
+                                                        
+                                                        // Attempt to calculate absolute date
+                                                        let dateStr = '';
+                                                        try {
+                                                            const match = timeAgo.match(/(\d+)\s+(year|month|day|hour|minute)s?\s+ago/i);
+                                                            const d = new Date(job.dateIngested); // baseline is when we saw it
+                                                            
+                                                            if (match) {
+                                                                const num = parseInt(match[1]);
+                                                                const unit = match[2].toLowerCase();
+                                                                
+                                                                if (unit === 'year') {
+                                                                    d.setFullYear(d.getFullYear() - num);
+                                                                } else if (unit === 'month') {
+                                                                    d.setMonth(d.getMonth() - num);
+                                                                } else if (unit === 'day') {
+                                                                    d.setDate(d.getDate() - num);
+                                                                } else if (unit === 'hour') {
+                                                                    d.setHours(d.getHours() - num);
+                                                                } else if (unit === 'minute') {
+                                                                    d.setMinutes(d.getMinutes() - num);
+                                                                }
+                                                                
+                                                                const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                                                                
+                                                                dateStr = new Intl.DateTimeFormat('en-GB', options).format(d);
+                                                            } else if (timeAgo.toLowerCase() === 'yesterday') {
+                                                                d.setDate(d.getDate() - 1);
+                                                                dateStr = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+                                                            } else if (timeAgo.toLowerCase() === 'today' || timeAgo.toLowerCase() === 'just now') {
+                                                                dateStr = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+                                                            }
+                                                        } catch (e) {
+                                                            // Ignore parsing errors, we just won't show the absolute date
+                                                        }
+                                                        
+                                                        return (
+                                                            <>
+                                                                {dateStr && <div style={{ fontSize: '14px', fontWeight: 500 }}>{dateStr}</div>}
+                                                                <div className="text-muted text-xs" style={{ marginTop: '2px' }}>{timeAgo}</div>
+                                                            </>
+                                                        );
+                                                    })()}
                                                 </div>
-                                                <div className="text-muted text-xs">{job.postedTimeAgo !== 'Just now' ? job.postedTimeAgo : ''}</div>
                                             </td>
                                             <td className="col-actions">
                                                 <div className="date-action-cell">

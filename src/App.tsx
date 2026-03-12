@@ -10,11 +10,17 @@ import { ConfiguratorView } from './components/configurator/ConfiguratorView';
 import { ScannerIdeasView } from './components/scanner-ideas/ScannerIdeasView';
 import { OutreachView } from './components/outreach/OutreachView';
 import { OutreachIdeasView } from './components/outreach-ideas/OutreachIdeasView';
+import { GoogleAdsView } from './components/google-ads/GoogleAdsView';
+import { GoogleAdsIdeasView } from './components/google-ads-ideas/GoogleAdsIdeasView';
+import { KeywordsView } from './components/keywords/KeywordsView';
+import { AgentDashboard } from './components/agent/AgentDashboard';
+import type { SavedKeyword } from './components/keywords/KeywordsView';
+import type { SavedGoogleAdsIdea } from './components/google-ads-ideas/GoogleAdsIdeasView';
 import type { SavedOutreachIdea } from './components/outreach-ideas/OutreachIdeasView';
 import type { SavedIdea } from './components/scanner-ideas/ScannerIdeasView';
-import { parseGigRadarText, cleanJobTitle } from './utils/parser';
+import { cleanJobTitle } from './utils/parser';
 
-export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas';
+export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas' | 'google-ads' | 'google-ads-ideas' | 'keywords' | 'agent';
 
 function App() {
   const [appState, setAppState] = useState<AppState>('ingestion');
@@ -22,6 +28,8 @@ function App() {
   const [savedJobs, setSavedJobs] = useState<ParsedJob[]>([]);
   const [scannerIdeas, setScannerIdeas] = useState<SavedIdea[]>([]);
   const [outreachIdeas, setOutreachIdeas] = useState<SavedOutreachIdea[]>([]);
+  const [googleAdsIdeas, setGoogleAdsIdeas] = useState<SavedGoogleAdsIdea[]>([]);
+  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
 
   useEffect(() => {
     // --- ONE-TIME SQLITE MIGRATION DEAMON ---
@@ -116,82 +124,45 @@ function App() {
         .then(res => res.json())
         .then(ideas => setOutreachIdeas(ideas))
         .catch(console.error);
+
+      fetch('/api/google-ads-ideas')
+        .then(res => res.json())
+        .then(ideas => setGoogleAdsIdeas(ideas))
+        .catch(console.error);
+
+      fetch('/api/keywords')
+        .then(res => res.json())
+        .then(kws => setSavedKeywords(kws))
+        .catch(console.error);
     });
   }, []);
 
   // Listen for Chrome Extension Syncs to auto-populate the Data Hub
+  // Listen for native Chrome Extension Sync events to live-refresh the Data Hub
   useEffect(() => {
     const handleExtensionSync = () => {
-      try {
-        const data = localStorage.getItem('revops_extension_sync');
-        if (data) {
-          const extensionJobs = JSON.parse(data);
-
-          if (extensionJobs.length > 0) {
-            setSavedJobs((prev: ParsedJob[]) => {
-              const existingIds = new Set(prev.map(p => p.id));
-              let added = false;
-              const newJobs = [...prev];
-
-              for (const match of extensionJobs) {
-                if (!existingIds.has(match.id)) {
-                  const parsed = parseGigRadarText(match.rawText) as ParsedJob;
-                  parsed.id = match.id;
-                  // Handle potential missing data gracefully
-                  parsed.title = cleanJobTitle(match.title || parsed.title || "Unknown Title");
-                  parsed.scannerName = match.scannerName || parsed.scannerName || "";
-                  parsed.booleanSearch = match.booleanSearch || '';
-                  parsed.matchScore = match.isMatch ? 10 : 1; // 10 for match, 1 for rejection
-                  parsed.dateIngested = match.dateRecorded || new Date().toISOString();
-                  newJobs.unshift(parsed);
-                  added = true;
-
-                  // Ship payload to backend
-                  fetch('/api/jobs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(parsed)
-                  });
-                }
-              }
-
-              return added ? newJobs : prev;
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Failed to sync extension jobs to Data Hub", err);
-      }
+      fetch('/api/jobs')
+        .then(res => res.json())
+        .then(data => setSavedJobs(data))
+        .catch(console.error);
     };
 
-    window.addEventListener('storage', handleExtensionSync);
-    handleExtensionSync(); // Initial load check
-    return () => window.removeEventListener('storage', handleExtensionSync);
+    window.addEventListener('revops:reload_jobs', handleExtensionSync);
+    return () => window.removeEventListener('revops:reload_jobs', handleExtensionSync);
   }, []);
 
   useEffect(() => {
-    if (window.location.search.includes('view=data')) {
-      setAppState('data');
-    } else if (window.location.search.includes('view=configurator')) {
-      setAppState('configurator');
-    } else if (window.location.search.includes('view=scanner-ideas')) {
-      setAppState('scanner-ideas');
-    } else if (window.location.search.includes('view=outreach-ideas')) {
-      setAppState('outreach-ideas');
-    } else if (window.location.search.includes('view=outreach')) {
-      setAppState('outreach');
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view') as AppState;
+    if (view && ['ingestion', 'results', 'scanner', 'data', 'configurator', 'scanner-ideas', 'outreach', 'outreach-ideas', 'google-ads', 'google-ads-ideas', 'keywords', 'agent'].includes(view)) {
+      setAppState(view);
     }
   }, []);
 
   const handleNavigate = (view: AppState) => {
     setAppState(view);
-    let newUrl = '/';
-    if (view === 'data') newUrl = '?view=data';
-    if (view === 'configurator') newUrl = '?view=configurator';
-    if (view === 'scanner-ideas') newUrl = '?view=scanner-ideas';
-    if (view === 'outreach-ideas') newUrl = '?view=outreach-ideas';
-    if (view === 'outreach') newUrl = '?view=outreach';
-    if (window.location.search !== newUrl) {
+    const newUrl = view === 'ingestion' ? '/' : `/?view=${view}`;
+    if (window.location.search !== (view === 'ingestion' ? '' : `?view=${view}`)) {
       window.history.replaceState({}, '', newUrl);
     }
   };
@@ -219,15 +190,6 @@ function App() {
     setSavedJobs(prev => prev.filter(job => job.id !== id));
     fetch(`/api/jobs/${id}`, { method: 'DELETE' });
 
-    // Also remove from extension sync if it exists there, so it doesn't resurrect on reload
-    try {
-      const extData = localStorage.getItem('revops_extension_sync');
-      if (extData) {
-        let extJobs = JSON.parse(extData);
-        extJobs = extJobs.filter((j: any) => j.id !== id);
-        localStorage.setItem('revops_extension_sync', JSON.stringify(extJobs));
-      }
-    } catch (err) { }
 
     // Dispatch event to app-sync.js so it deletes the job from the true Chrome internal storage
     window.dispatchEvent(new CustomEvent('revops:delete_job', { detail: id }));
@@ -265,6 +227,34 @@ function App() {
     fetch(`/api/outreach-ideas/${id}`, { method: 'DELETE' });
   };
 
+  const handleGoogleAdsIdeaGenerated = (idea: SavedGoogleAdsIdea) => {
+    setGoogleAdsIdeas(prev => [idea, ...prev]);
+  };
+
+  const handleDeleteGoogleAdsIdea = (id: string) => {
+    setGoogleAdsIdeas(prev => prev.filter(idea => idea.id !== id));
+    fetch(`/api/google-ads-ideas/${id}`, { method: 'DELETE' });
+  };
+
+  const handleDeleteKeyword = (id: string) => {
+    setSavedKeywords((prev: SavedKeyword[]) => prev.filter((kw: SavedKeyword) => kw.id !== id));
+    fetch(`/api/keywords/${id}`, { method: 'DELETE' });
+  };
+
+  const handleAddKeyword = (kw: Omit<SavedKeyword, 'id' | 'dateSaved'>) => {
+    const newKw: SavedKeyword = {
+      ...kw,
+      id: 'kw_' + Date.now(),
+      dateSaved: new Date().toISOString()
+    };
+    setSavedKeywords(prev => [newKw, ...prev]);
+    fetch('/api/keywords', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newKw)
+    });
+  };
+
   const resetFlow = () => {
     setAppState('ingestion');
     setExtractedData(null);
@@ -282,7 +272,7 @@ function App() {
             onNavigateToData={() => handleNavigate('data')}
           />
         )}
-        {appState === 'results' && extractedData && (
+        {appState === 'results' && (
           <OutputDashboard
             data={extractedData}
             onReset={resetFlow}
@@ -292,8 +282,12 @@ function App() {
         {appState === 'configurator' && <ConfiguratorView approvedJobs={savedJobs} onDeleteJob={handleDeleteJob} onSaveIdea={handleSaveIdea} />}
         {appState === 'scanner-ideas' && <ScannerIdeasView ideas={scannerIdeas} onDeleteIdea={handleDeleteIdea} />}
         {appState === 'outreach-ideas' && <OutreachIdeasView ideas={outreachIdeas} onDeleteIdea={handleDeleteOutreachIdea} />}
+        {appState === 'keywords' && <KeywordsView keywords={savedKeywords} onDelete={handleDeleteKeyword} onAdd={handleAddKeyword} />}
         {appState === 'outreach' && <OutreachView approvedJobs={savedJobs.filter(j => j.matchScore && j.matchScore >= 5)} onIdeaGenerated={handleIdeaGenerated} />}
+        {appState === 'google-ads' && <GoogleAdsView approvedJobs={savedJobs.filter(j => j.matchScore && j.matchScore >= 5)} onIdeaGenerated={handleGoogleAdsIdeaGenerated} />}
+        {appState === 'google-ads-ideas' && <GoogleAdsIdeasView ideas={googleAdsIdeas} onDeleteIdea={handleDeleteGoogleAdsIdea} />}
         {appState === 'data' && <DataView jobs={savedJobs.filter(j => j.matchScore && j.matchScore >= 5)} onDeleteJob={handleDeleteJob} onUpdateJob={handleUpdateJob} />}
+        {appState === 'agent' && <AgentDashboard />}
       </Layout>
     </div>
   );
