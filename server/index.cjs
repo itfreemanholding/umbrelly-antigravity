@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { pool, getProjects, createProject, renameProject, deleteProject } = require('./db.cjs');
@@ -8,7 +9,7 @@ app.use(express.json({ limit: '10mb' }));
 
 const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({
-    apiKey: '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'
+    apiKey: process.env.CLAUDE_API_KEY
 });
 
 const { initAgent } = require('./agents/outboundAgent.cjs');
