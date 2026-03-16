@@ -25,6 +25,7 @@ export interface ParsedJob {
     postedTimeAgo: string;
     cloudTag: string;
     rawText: string;
+    dataType?: 'Gigradar' | 'Quote' | 'PNF Reply' | 'Call Recording' | 'Competitor Website' | 'Social Media' | 'LinkedIn Employees' | 'Paid Ads' | 'SEO/AEO' | 'PR & Media' | string;
 }
 
 export function cleanJobTitle(title: string): string {

@@ -284,6 +284,54 @@ app.post('/api/claude/outreach', getProjectId, async (req, res) => {
     }
 });
 
+app.post('/api/claude/extract-economics', getProjectId, async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ error: "No text provided for extraction" });
+        }
+
+        const systemMsg = `You are a strict data-extraction AI for a B2B unit economics engine.
+Your goal is to parse unstructured text (often in Russian or English) outlining a business model, and output ONLY a pristine JSON object matching exactly these 5 keys (all values must be Numbers or 0 if unknown):
+{
+  "contracts": number, // Target volume of contracts
+  "revenuePerContract": number, // Average Deal Size / Price per contract
+  "cac": number, // Customer Acquisition Cost per single contract
+  "productionCostPerContract": number, // COGS per contract
+  "coreTeamCost": number // Total Annual fixed team cost
+}
+
+CRITICAL RULES:
+- If a monthly cost is given (e.g. $15k/mo), multiply by 12 for annual.
+- If total revenue is given but not per-contract, divide total by contacts.
+- Do NOT output any markdown blocks (like \`\`\`json). Output the raw {} JSON object ONLY.
+- Strip all formatting, commas, strings. Output raw floats/integers.`;
+
+        const msg = await anthropic.messages.create({
+            model: "claude-sonnet-4-6",
+            max_tokens: 500,
+            temperature: 0,
+            system: systemMsg,
+            messages: [{ role: "user", content: text }]
+        });
+
+        const resultText = msg.content[0].text.trim();
+        let parsed;
+        try {
+            const cleaned = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(cleaned);
+        } catch (e) {
+            console.error("Failed to parse Claude JSON output:", resultText);
+            throw new Error("Failed to parse extracted variables. Please check the raw text format.");
+        }
+
+        res.json({ success: true, economics: parsed });
+    } catch (err) {
+        console.error("Economics Extraction Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/claude/google-ads', getProjectId, async (req, res) => {
     try {
         const { jobs, option, customPrompt, masterPrompt } = req.body;
@@ -473,6 +521,56 @@ app.get('/api/google-ads-ideas', getProjectId, async (req, res) => {
 app.delete('/api/google-ads-ideas/:id', getProjectId, async (req, res) => {
     try {
         await pool.query('DELETE FROM google_ads_ideas WHERE id = $1 AND project_id = $2', [req.params.id, req.projectId]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Hypotheses API ---
+app.get('/api/hypotheses', getProjectId, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM hypotheses WHERE project_id = $1 ORDER BY date_created DESC', [req.projectId]);
+        const mappedRows = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            description: row.description || '',
+            status: row.status,
+            economics: row.economics,
+            assumptions: row.assumptions,
+            experiment: row.experiment,
+            dateCreated: row.date_created
+        }));
+        res.json(mappedRows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/hypotheses', getProjectId, async (req, res) => {
+    const { id, title, description, status, economics, assumptions, experiment, dateCreated } = req.body;
+    try {
+        await pool.query(`
+            INSERT INTO hypotheses (id, project_id, title, description, status, economics, assumptions, experiment, date_created)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (id) DO UPDATE SET 
+                title = EXCLUDED.title, 
+                description = EXCLUDED.description,
+                status = EXCLUDED.status, 
+                economics = EXCLUDED.economics, 
+                assumptions = EXCLUDED.assumptions, 
+                experiment = EXCLUDED.experiment
+        `, [id, req.projectId, title, description || '', status, JSON.stringify(economics), JSON.stringify(assumptions), JSON.stringify(experiment), dateCreated]);
+        res.json({ success: true, id });
+    } catch (err) {
+        console.error("Hypotheses POST Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/hypotheses/:id', getProjectId, async (req, res) => {
+    try {
+        await pool.query('DELETE FROM hypotheses WHERE id = $1 AND project_id = $2', [req.params.id, req.projectId]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

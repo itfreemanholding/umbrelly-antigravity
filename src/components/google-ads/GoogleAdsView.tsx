@@ -57,7 +57,7 @@ export const GoogleAdsView: React.FC<GoogleAdsViewProps> = ({ approvedJobs, onId
 
     const getPreviewPrompt = () => {
         const jobContext = approvedJobs.map((j) => {
-            return `Title: ${j.title}\nCompany: Unknown\nDescription: ${cleanJobText(j.rawText)}`;
+            return `[Intelligence Type: ${j.dataType || 'Gigradar / Upwork Job'}]\nSource/Title: ${j.title}\nContent Data:\n${cleanJobText(j.rawText)}`;
         }).join('\n\n---\n\n');
 
         let strategyContext = "";

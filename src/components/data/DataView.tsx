@@ -18,6 +18,32 @@ const CloudLogo = ({ tag }: { tag: string }) => {
     return null;
 }
 
+import { FileText, MessageSquare, Video, Globe, Share2, Users, MonitorPlay, Search as SearchIcon, Newspaper } from 'lucide-react';
+
+const TypeBadge = ({ type }: { type: string }) => {
+    let Config = { icon: Database, color: 'var(--accent-primary)', bg: 'rgba(99, 102, 241, 0.1)' };
+    
+    switch(type) {
+        case 'Quote': Config = { icon: FileText, color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)' }; break;
+        case 'PNF Reply': Config = { icon: MessageSquare, color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)' }; break;
+        case 'Call Recording': Config = { icon: Video, color: '#eab308', bg: 'rgba(234, 179, 8, 0.1)' }; break;
+        case 'Competitor Website': Config = { icon: Globe, color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)' }; break;
+        case 'Social Media': Config = { icon: Share2, color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.1)' }; break;
+        case 'LinkedIn Employees': Config = { icon: Users, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' }; break;
+        case 'Paid Ads': Config = { icon: MonitorPlay, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)' }; break;
+        case 'SEO/AEO': Config = { icon: SearchIcon, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' }; break;
+        case 'PR & Media': Config = { icon: Newspaper, color: '#14b8a6', bg: 'rgba(20, 184, 166, 0.1)' }; break;
+        default: break; // Gigradar applies default
+    }
+
+    const Icon = Config.icon;
+    return (
+        <span className="skill-badge" style={{ backgroundColor: Config.bg, color: Config.color, display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+            <Icon size={12} /> {type}
+        </span>
+    );
+}
+
 export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -147,12 +173,11 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th>Job Title</th>
+                                <th>Source / Title</th>
+                                <th>Data Type</th>
                                 <th onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>
-                                    <div className="th-content">Score <ArrowUpDown size={14} /></div>
+                                    <div className="th-content">Context & Score <ArrowUpDown size={14} /></div>
                                 </th>
-                                <th>Budget & Rate</th>
-                                <th>Country</th>
                                 <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>
                                     <div className="th-content">Date <ArrowUpDown size={14} /></div>
                                 </th>
@@ -212,20 +237,23 @@ export function DataView({ jobs, onDeleteJob, onUpdateJob }: DataViewProps) {
                                                         </span>
                                                     )}
                                                 </div>
-                                                {job.memo && <div className="job-memo" style={{ marginTop: '4px' }}>Memo: {job.memo}</div>}
                                             </td>
-                                            <td className="col-score">
-                                                <span className={`rating-badge small ${job.matchScore >= 8 ? 'high' : job.matchScore >= 5 ? 'med' : 'low'}`}>
-                                                    {job.matchScore}/10
-                                                </span>
+                                            <td className="col-type">
+                                                <TypeBadge type={job.dataType || 'Gigradar'} />
                                             </td>
-                                            <td className="col-budget">
-                                                <div className="metric-text" style={{ fontSize: '14px', fontWeight: 500 }}>{(!job.paymentType || job.paymentType === '-') ? 'Unspecified Rate' : job.paymentType}</div>
-                                                <div className="text-muted text-xs">{job.budget && job.budget !== '-' ? job.budget : 'Budget unassigned'}</div>
-                                            </td>
-                                            <td className="col-client">
-                                                <div className="metric-text" style={{ fontSize: '16px' }} title={job.clientCountry}>
-                                                    {(!job.clientCountry || job.clientCountry === '-') ? 'Unknown Location' : job.clientCountry} {job.paymentVerified && <span style={{ fontSize: '12px', color: 'var(--success)' }}>✓</span>}
+                                            <td className="col-context">
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span className={`rating-badge small ${job.matchScore >= 8 ? 'high' : job.matchScore >= 5 ? 'med' : 'low'}`}>
+                                                            {job.matchScore}/10
+                                                        </span>
+                                                        {(!job.dataType || job.dataType === 'Gigradar') && (
+                                                            <span className="text-muted" style={{ fontSize: '13px' }}>
+                                                                {job.clientCountry} • {job.budget && job.budget !== '-' ? job.budget : job.paymentType}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {job.memo && <div className="text-muted text-xs" style={{ fontStyle: 'italic' }}>{job.memo}</div>}
                                                 </div>
                                             </td>
                                             <td className="col-date">

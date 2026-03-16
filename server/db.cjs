@@ -87,6 +87,23 @@ async function initTables() {
             message TEXT NOT NULL
         );
     `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS hypotheses (
+            id TEXT PRIMARY KEY,
+            project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL,
+            economics JSONB,
+            assumptions JSONB,
+            experiment JSONB,
+            description TEXT,
+            date_created TEXT
+        );
+    `);
+
+    // Ensure the description column exists for existing tables
+    await pool.query(`ALTER TABLE hypotheses ADD COLUMN IF NOT EXISTS description TEXT;`).catch(console.error);
     
     // Ensure there is at least one active project, if not instantiate Default
     const res = await pool.query(`SELECT id FROM projects LIMIT 1`);

@@ -5,7 +5,6 @@ import {
     Archive,
     PieChart,
     Database,
-    BrainCircuit,
     Settings,
     Lightbulb,
     Send,
@@ -20,7 +19,10 @@ import {
     MoreVertical,
     X,
     Trash2,
-    Edit2
+    Edit2,
+    Activity,
+    Target,
+    TrendingUp
 } from 'lucide-react';
 import type { AppState } from '../../App';
 
@@ -265,6 +267,24 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             </div>
 
             <nav className="sidebar-nav">
+                <div className="nav-group-title" style={{ paddingLeft: '12px', fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Growth Engine</div>
+                <button
+                    className={`nav-item ${currentView === 'run-test' ? 'active' : ''}`}
+                    onClick={() => onNavigate('run-test')}
+                >
+                    <Target className="nav-icon text-success" />
+                    Run Test
+                </button>
+
+                <button
+                    className={`nav-item ${currentView === 'scale' ? 'active' : ''}`}
+                    onClick={() => onNavigate('scale')}
+                >
+                    <TrendingUp className="nav-icon text-success" />
+                    Scale
+                </button>
+
+                <div className="nav-group-title" style={{ marginTop: '16px', paddingLeft: '12px', fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Data & Operations</div>
                 <button
                     className={`nav-item ${currentView === 'ingestion' ? 'active' : ''}`}
                     onClick={() => onNavigate('ingestion')}
@@ -279,6 +299,14 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                 >
                     <Archive className="nav-icon" />
                     Data Hub
+                </button>
+
+                <button
+                    className={`nav-item ${currentView === 'tracking' ? 'active' : ''}`}
+                    onClick={() => onNavigate('tracking')}
+                >
+                    <Activity className="nav-icon" />
+                    Website Tracking
                 </button>
 
                 <button

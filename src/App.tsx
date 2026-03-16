@@ -14,16 +14,19 @@ import { GoogleAdsView } from './components/google-ads/GoogleAdsView';
 import { GoogleAdsIdeasView } from './components/google-ads-ideas/GoogleAdsIdeasView';
 import { KeywordsView } from './components/keywords/KeywordsView';
 import { AgentDashboard } from './components/agent/AgentDashboard';
+import { TrackingView } from './components/tracking/TrackingView';
+import { RunTestView } from './components/run-test/RunTestView';
+import { ScaleView } from './components/scale/ScaleView';
 import type { SavedKeyword } from './components/keywords/KeywordsView';
 import type { SavedGoogleAdsIdea } from './components/google-ads-ideas/GoogleAdsIdeasView';
 import type { SavedOutreachIdea } from './components/outreach-ideas/OutreachIdeasView';
 import type { SavedIdea } from './components/scanner-ideas/ScannerIdeasView';
 import { cleanJobTitle } from './utils/parser';
 
-export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas' | 'google-ads' | 'google-ads-ideas' | 'keywords' | 'agent';
+export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas' | 'google-ads' | 'google-ads-ideas' | 'keywords' | 'agent' | 'tracking' | 'run-test' | 'scale';
 
 function App() {
-  const [appState, setAppState] = useState<AppState>('ingestion');
+  const [appState, setAppState] = useState<AppState>('run-test');
   const [extractedData, setExtractedData] = useState<any>(null);
   const [savedJobs, setSavedJobs] = useState<ParsedJob[]>([]);
   const [scannerIdeas, setScannerIdeas] = useState<SavedIdea[]>([]);
@@ -154,15 +157,15 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view') as AppState;
-    if (view && ['ingestion', 'results', 'scanner', 'data', 'configurator', 'scanner-ideas', 'outreach', 'outreach-ideas', 'google-ads', 'google-ads-ideas', 'keywords', 'agent'].includes(view)) {
+    if (view && ['ingestion', 'results', 'scanner', 'data', 'configurator', 'scanner-ideas', 'outreach', 'outreach-ideas', 'google-ads', 'google-ads-ideas', 'keywords', 'agent', 'tracking', 'run-test', 'scale'].includes(view)) {
       setAppState(view);
     }
   }, []);
 
   const handleNavigate = (view: AppState) => {
     setAppState(view);
-    const newUrl = view === 'ingestion' ? '/' : `/?view=${view}`;
-    if (window.location.search !== (view === 'ingestion' ? '' : `?view=${view}`)) {
+    const newUrl = view === 'run-test' ? '/' : `/?view=${view}`;
+    if (window.location.search !== (view === 'run-test' ? '' : `?view=${view}`)) {
       window.history.replaceState({}, '', newUrl);
     }
   };
@@ -256,7 +259,7 @@ function App() {
   };
 
   const resetFlow = () => {
-    setAppState('ingestion');
+    setAppState('run-test');
     setExtractedData(null);
   };
 
@@ -288,6 +291,9 @@ function App() {
         {appState === 'google-ads-ideas' && <GoogleAdsIdeasView ideas={googleAdsIdeas} onDeleteIdea={handleDeleteGoogleAdsIdea} />}
         {appState === 'data' && <DataView jobs={savedJobs.filter(j => j.matchScore && j.matchScore >= 5)} onDeleteJob={handleDeleteJob} onUpdateJob={handleUpdateJob} />}
         {appState === 'agent' && <AgentDashboard />}
+        {appState === 'tracking' && <TrackingView />}
+        {appState === 'run-test' && <RunTestView />}
+        {appState === 'scale' && <ScaleView />}
       </Layout>
     </div>
   );
