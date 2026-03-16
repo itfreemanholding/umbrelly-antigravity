@@ -1,0 +1,26 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/umbrelly-antigravity
+            git pull origin main
+            npm install
+            echo "${{ secrets.ENV_FILE }}" > .env
+            npx vite build
+            kill $(lsof -t -i:80) 2>/dev/null || true
+            cd server && nohup node index.cjs > /tmp/antigravity.log 2>&1 &
+            sleep 2
+            curl -s http://localhost/ > /dev/null && echo "Deploy successful!" || echo "Deploy may have issues"
