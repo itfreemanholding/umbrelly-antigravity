@@ -14,6 +14,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          command_timeout: 10m
           script: |
             cd ~/umbrelly-antigravity
             git pull origin main
@@ -21,6 +22,8 @@ jobs:
             echo "${{ secrets.ENV_FILE }}" > .env
             npx vite build
             kill $(lsof -t -i:80) 2>/dev/null || true
-            cd server && nohup node index.cjs > /tmp/antigravity.log 2>&1 &
-            sleep 2
-            curl -s http://localhost/ > /dev/null && echo "Deploy successful!" || echo "Deploy may have issues"
+            sleep 1
+            nohup node server/index.cjs > /tmp/antigravity.log 2>&1 &
+            disown
+            sleep 3
+            curl -sf http://localhost/ > /dev/null && echo "Deploy successful!" || echo "Deploy may have issues"
