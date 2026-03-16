@@ -1,4 +1,5 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { pool, getProjects, createProject, renameProject, deleteProject } = require('./db.cjs');
@@ -578,6 +579,7 @@ app.delete('/api/hypotheses/:id', getProjectId, async (req, res) => {
     }
 });
 
+app.use(express.static(path.join(__dirname, '..', 'dist')));
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, (err) => {
     if (err) {

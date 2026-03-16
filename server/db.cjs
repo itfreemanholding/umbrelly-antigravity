@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: 'postgres://localhost/umbrelly_revops'
+  connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost/umbrelly_revops'
 });
 
 async function initTables() {
