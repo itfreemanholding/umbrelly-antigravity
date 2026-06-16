@@ -17,13 +17,14 @@ import { AgentDashboard } from './components/agent/AgentDashboard';
 import { TrackingView } from './components/tracking/TrackingView';
 import { RunTestView } from './components/run-test/RunTestView';
 import { ScaleView } from './components/scale/ScaleView';
+import { PresentationView } from './components/presentation/PresentationView';
 import type { SavedKeyword } from './components/keywords/KeywordsView';
 import type { SavedGoogleAdsIdea } from './components/google-ads-ideas/GoogleAdsIdeasView';
 import type { SavedOutreachIdea } from './components/outreach-ideas/OutreachIdeasView';
 import type { SavedIdea } from './components/scanner-ideas/ScannerIdeasView';
 import { cleanJobTitle } from './utils/parser';
 
-export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas' | 'google-ads' | 'google-ads-ideas' | 'keywords' | 'agent' | 'tracking' | 'run-test' | 'scale';
+export type AppState = 'ingestion' | 'results' | 'scanner' | 'data' | 'configurator' | 'scanner-ideas' | 'outreach' | 'outreach-ideas' | 'google-ads' | 'google-ads-ideas' | 'keywords' | 'agent' | 'tracking' | 'run-test' | 'scale' | 'presentation';
 
 function App() {
   const [appState, setAppState] = useState<AppState>('run-test');
@@ -157,7 +158,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view') as AppState;
-    if (view && ['ingestion', 'results', 'scanner', 'data', 'configurator', 'scanner-ideas', 'outreach', 'outreach-ideas', 'google-ads', 'google-ads-ideas', 'keywords', 'agent', 'tracking', 'run-test', 'scale'].includes(view)) {
+    if (view && ['ingestion', 'results', 'scanner', 'data', 'configurator', 'scanner-ideas', 'outreach', 'outreach-ideas', 'google-ads', 'google-ads-ideas', 'keywords', 'agent', 'tracking', 'run-test', 'scale', 'presentation'].includes(view)) {
       setAppState(view);
     }
   }, []);
@@ -294,6 +295,7 @@ function App() {
         {appState === 'tracking' && <TrackingView />}
         {appState === 'run-test' && <RunTestView />}
         {appState === 'scale' && <ScaleView />}
+        {appState === 'presentation' && <PresentationView />}
       </Layout>
     </div>
   );

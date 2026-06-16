@@ -1,0 +1,787 @@
+/* ================================================================== */
+/*  Umbrelly presentation deck                                         */
+/*  Self-contained brand styling, scoped under .umb-deck               */
+/* ================================================================== */
+
+.umb-deck {
+    --umb-purple: #6d4aff;
+    --umb-purple-2: #8b5cf6;
+    --umb-ink: #1c2333;
+    --umb-ink-soft: #4a5167;
+    --umb-muted: #8b91a3;
+    --umb-bg: #f6f5fb;
+    --umb-card: #ffffff;
+    --umb-line: rgba(28, 35, 51, 0.08);
+    --umb-green: #2f8f4e;
+    --umb-green-bg: #d6f4a6;
+    --umb-shadow: 0 18px 40px -24px rgba(28, 35, 51, 0.35);
+
+    padding: 24px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* The 16:9 stage that holds one slide at a time. */
+.umb-stage {
+    position: relative;
+    width: 100%;
+    max-width: 1180px;
+    aspect-ratio: 16 / 9;
+    background: var(--umb-bg);
+    border: 1px solid var(--umb-line);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--umb-shadow);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--umb-ink);
+}
+
+.umb-deck.is-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    padding: 0;
+    background: #0b0d16;
+    align-items: center;
+}
+
+.umb-deck.is-fullscreen .umb-stage {
+    border-radius: 0;
+    max-width: min(100vw, calc(100vh * 16 / 9));
+    max-height: 100vh;
+    border: none;
+}
+
+/* Dotted brand backdrop */
+.umb-dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(28, 35, 51, 0.07) 1.1px, transparent 1.1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Slide frame & layout                                               */
+/* ------------------------------------------------------------------ */
+
+.umb-slide-frame {
+    position: absolute;
+    inset: 0;
+    padding: clamp(28px, 5.2vw, 72px);
+    padding-bottom: clamp(56px, 8vw, 96px);
+    z-index: 1;
+    display: flex;
+    animation: umbFade 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes umbFade {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.umb-slide {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(12px, 1.6vw, 20px);
+}
+
+.umb-slide--center {
+    align-items: center;
+    text-align: center;
+}
+
+.umb-slide--split {
+    flex-direction: row;
+    align-items: center;
+    gap: 40px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Brand chrome                                                       */
+/* ------------------------------------------------------------------ */
+
+.umb-wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: clamp(22px, 2.6vw, 30px);
+    letter-spacing: -0.02em;
+    color: var(--umb-ink);
+}
+
+.umb-wordmark.is-muted {
+    font-size: clamp(15px, 1.5vw, 18px);
+    color: var(--umb-muted);
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.umb-slide--center .umb-wordmark.is-muted {
+    align-self: center;
+}
+
+.umb-tagline {
+    font-size: clamp(16px, 2vw, 24px);
+    font-weight: 600;
+    color: var(--umb-ink-soft);
+    margin-top: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Typography                                                         */
+/* ------------------------------------------------------------------ */
+
+.umb-hero-title {
+    font-size: clamp(40px, 7vw, 92px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-top: 6px;
+}
+
+.umb-grad {
+    background: linear-gradient(120deg, var(--umb-purple-2), var(--umb-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.umb-hero-sub {
+    font-size: clamp(15px, 1.5vw, 19px);
+    color: var(--umb-ink-soft);
+    max-width: 620px;
+    margin-top: 4px;
+}
+
+.umb-h2 {
+    font-size: clamp(28px, 3.8vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--umb-ink);
+}
+
+.umb-lead {
+    font-size: clamp(14px, 1.4vw, 18px);
+    color: var(--umb-ink-soft);
+    max-width: 760px;
+    line-height: 1.5;
+}
+
+.umb-lead--center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Feature pills (hero)                                               */
+/* ------------------------------------------------------------------ */
+
+.umb-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.umb-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px 10px 12px;
+    background: var(--umb-card);
+    border: 1px solid var(--umb-line);
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: clamp(13px, 1.2vw, 16px);
+    box-shadow: var(--umb-shadow);
+}
+
+.umb-pill-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--umb-ink);
+    color: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Grids & cards                                                      */
+/* ------------------------------------------------------------------ */
+
+.umb-grid {
+    display: grid;
+    gap: clamp(12px, 1.4vw, 18px);
+    width: 100%;
+    margin-top: 8px;
+}
+
+.umb-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.umb-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.umb-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.umb-card {
+    background: var(--umb-card);
+    border: 1px solid var(--umb-line);
+    border-radius: 16px;
+    padding: clamp(16px, 1.8vw, 24px);
+    box-shadow: var(--umb-shadow);
+}
+
+.umb-card-title {
+    font-size: clamp(16px, 1.5vw, 20px);
+    font-weight: 700;
+    color: var(--umb-ink);
+    margin-bottom: 4px;
+}
+
+.umb-card-desc {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--umb-ink-soft);
+    line-height: 1.45;
+}
+
+/* stat cards (problem) */
+.umb-card--stat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.umb-stat-value {
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.umb-stat-label {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--umb-ink-soft);
+    line-height: 1.45;
+}
+
+/* needs cards */
+.umb-card--needs {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.umb-needs-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(109, 74, 255, 0.1);
+    color: var(--umb-purple);
+}
+
+/* step cards (how) */
+.umb-card--step {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.umb-step-n {
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 800;
+    color: var(--umb-purple);
+    letter-spacing: -0.02em;
+}
+
+/* pillar cards */
+.umb-card--pillar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.umb-pillar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--umb-purple-2), var(--umb-purple));
+    color: #fff;
+}
+
+/* about cards */
+.umb-about-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.umb-card--about {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.umb-about-flag {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.umb-about-value {
+    font-size: clamp(20px, 2vw, 28px);
+    font-weight: 800;
+    color: var(--umb-ink);
+    letter-spacing: -0.02em;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Information request (split + cloud illustration)                   */
+/* ------------------------------------------------------------------ */
+
+.umb-split-main {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.umb-split-aside {
+    flex: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.umb-timeline {
+    list-style: none;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.umb-timeline li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: clamp(13px, 1.25vw, 16px);
+    font-weight: 500;
+    color: var(--umb-ink);
+    position: relative;
+}
+
+.umb-timeline li::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 22px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--umb-line);
+}
+
+.umb-timeline li:last-child::before { display: none; }
+
+.umb-timeline-dot {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid var(--umb-purple);
+    background: #fff;
+    z-index: 1;
+}
+
+.umb-cloud-illu {
+    position: relative;
+    width: clamp(180px, 22vw, 280px);
+    height: clamp(180px, 22vw, 280px);
+    border-radius: 36px;
+    background: linear-gradient(160deg, var(--umb-purple-2), var(--umb-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 24px 50px -20px rgba(109, 74, 255, 0.6);
+}
+
+.umb-cloud-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    bottom: 28%;
+}
+
+.umb-cloud-dot:nth-of-type(2) { transform: translateY(16px); }
+
+.umb-cloud-ring {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    bottom: 16%;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Savings slide                                                      */
+/* ------------------------------------------------------------------ */
+
+.umb-slide--savings {
+    gap: 16px;
+}
+
+.umb-savings-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.umb-prepared {
+    font-size: clamp(12px, 1.1vw, 14px);
+    font-weight: 600;
+    color: var(--umb-muted);
+}
+
+.umb-savings-title {
+    font-size: clamp(24px, 3.4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+    max-width: 920px;
+}
+
+.umb-strike-old {
+    background: rgba(28, 35, 51, 0.06);
+    border-radius: 8px;
+    padding: 0 8px;
+    color: var(--umb-ink-soft);
+}
+
+.umb-amount-new {
+    background: var(--umb-green-bg);
+    color: var(--umb-green);
+    border-radius: 8px;
+    padding: 0 8px;
+}
+
+.umb-extras {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 720px;
+    margin: 4px auto 0;
+}
+
+.umb-extra {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    background: var(--umb-card);
+    border: 1px solid var(--umb-line);
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: var(--umb-shadow);
+}
+
+.umb-extra-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(109, 74, 255, 0.1);
+    color: var(--umb-purple);
+}
+
+.umb-extra strong {
+    display: block;
+    font-size: clamp(14px, 1.3vw, 17px);
+    color: var(--umb-ink);
+}
+
+.umb-extra p {
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--umb-ink-soft);
+    margin-top: 2px;
+}
+
+.umb-fineprint {
+    font-size: clamp(10px, 0.85vw, 12px);
+    color: var(--umb-muted);
+    max-width: 740px;
+    margin: 4px auto 0;
+    line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------ */
+/*  CTA button                                                         */
+/* ------------------------------------------------------------------ */
+
+.umb-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+    padding: 15px 34px;
+    border-radius: 14px;
+    background: linear-gradient(120deg, var(--umb-purple-2), var(--umb-purple));
+    color: #fff;
+    font-weight: 700;
+    font-size: clamp(15px, 1.4vw, 18px);
+    box-shadow: 0 16px 34px -14px rgba(109, 74, 255, 0.7);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.umb-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 40px -14px rgba(109, 74, 255, 0.8);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Partners                                                           */
+/* ------------------------------------------------------------------ */
+
+.umb-partner-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(16px, 2vw, 28px);
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.umb-partner-card {
+    width: clamp(150px, 16vw, 210px);
+    aspect-ratio: 3 / 2;
+    background: var(--umb-card);
+    border: 1px solid var(--umb-line);
+    border-radius: 16px;
+    box-shadow: var(--umb-shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.umb-partner-name {
+    font-size: clamp(18px, 1.8vw, 24px);
+    font-weight: 800;
+    color: var(--umb-ink);
+    letter-spacing: -0.02em;
+}
+
+.umb-partner-sub {
+    font-size: clamp(11px, 1vw, 13px);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--umb-purple);
+}
+
+.umb-trust {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    font-weight: 600;
+    color: var(--umb-ink-soft);
+}
+
+.umb-star {
+    color: #f5a623;
+    fill: #f5a623;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Why list                                                           */
+/* ------------------------------------------------------------------ */
+
+.umb-why-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.umb-why-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--umb-card);
+    border: 1px solid var(--umb-line);
+    border-radius: 14px;
+    padding: 18px 22px;
+    font-size: clamp(13px, 1.25vw, 16px);
+    font-weight: 500;
+    color: var(--umb-ink);
+    box-shadow: var(--umb-shadow);
+}
+
+.umb-why-check {
+    flex: none;
+    color: var(--umb-green);
+}
+
+/* ------------------------------------------------------------------ */
+/*  CTA slide                                                          */
+/* ------------------------------------------------------------------ */
+
+.umb-cta-title {
+    font-size: clamp(34px, 5vw, 64px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-top: 8px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Deck chrome: counter, nav, dots, footer                           */
+/* ------------------------------------------------------------------ */
+
+.umb-counter {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid var(--umb-line);
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--umb-ink);
+    box-shadow: var(--umb-shadow);
+}
+
+.umb-fs-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: #fff;
+    border: 1px solid var(--umb-line);
+    border-radius: 12px;
+    color: var(--umb-ink-soft);
+    box-shadow: var(--umb-shadow);
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.umb-fs-btn:hover {
+    color: var(--umb-purple);
+    transform: translateY(-1px);
+}
+
+.umb-deck-footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px clamp(28px, 5vw, 72px);
+    font-size: clamp(10px, 0.85vw, 12px);
+    color: var(--umb-muted);
+    border-top: 1px solid var(--umb-line);
+    background: linear-gradient(to top, rgba(246, 245, 251, 0.95), rgba(246, 245, 251, 0));
+}
+
+.umb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border: 1px solid var(--umb-line);
+    border-radius: 50%;
+    color: var(--umb-ink);
+    box-shadow: var(--umb-shadow);
+    transition: transform 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+}
+
+.umb-nav:hover:not(:disabled) {
+    color: var(--umb-purple);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.umb-nav:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.umb-nav--prev { left: 16px; }
+.umb-nav--next { right: 16px; }
+
+.umb-progress {
+    position: absolute;
+    bottom: 42px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 8px;
+}
+
+.umb-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(28, 35, 51, 0.18);
+    transition: all 0.2s ease;
+}
+
+.umb-progress-dot.is-active {
+    width: 26px;
+    border-radius: 4px;
+    background: var(--umb-purple);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Responsive                                                         */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+    .umb-grid-3,
+    .umb-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .umb-slide--split { flex-direction: column; }
+    .umb-why-list { grid-template-columns: 1fr; }
+}

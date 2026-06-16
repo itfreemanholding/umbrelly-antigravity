@@ -22,7 +22,8 @@ import {
     Edit2,
     Activity,
     Target,
-    TrendingUp
+    TrendingUp,
+    Presentation
 } from 'lucide-react';
 import type { AppState } from '../../App';
 
@@ -371,6 +372,15 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                 >
                     <MousePointerClick className="nav-icon" />
                     Google Ads Ideas
+                </button>
+
+                <div className="nav-group-title" style={{ marginTop: '16px', paddingLeft: '12px', fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Sales</div>
+                <button
+                    className={`nav-item ${currentView === 'presentation' ? 'active' : ''}`}
+                    onClick={() => onNavigate('presentation')}
+                >
+                    <Presentation className="nav-icon text-accent" />
+                    Presentation
                 </button>
 
                 <div className="nav-group-title" style={{ marginTop: '16px', paddingLeft: '12px', fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Autonomy</div>
